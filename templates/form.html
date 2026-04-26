@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Assessment | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/market">Market Trends</a>
+    </div>
+</nav>
+
+<div class="form-hero">
+    <h1>Career Assessment</h1>
+    <p>Tell us about yourself and let AI find your perfect career match</p>
+    <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <p class="progress-text" id="progressText">0% Complete</p>
+</div>
+
+<div class="form-container">
+    <form action="/results" method="POST" id="careerForm">
+
+        <!-- SECTION 1 -->
+        <div class="form-section">
+            <div class="section-title">🎯 Career Interest</div>
+            <div class="form-group">
+                <label>What career field interests you? <span class="required">*</span></label>
+                <input type="text" name="career_interest" placeholder="e.g., Artificial Intelligence, Software Development, Business Strategy" required>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="form-section">
+            <div class="section-title">💻 Technical Skills</div>
+            <div class="form-group">
+                <label>IT/Technical Skills <span class="required">*</span></label>
+                <textarea name="technical_skills" rows="3" placeholder="e.g., Python, Java, Machine Learning, Data Analysis, Cloud Computing" required></textarea>
+            </div>
+        </div>
+
+        <!-- SECTION 3 -->
+        <div class="form-section">
+            <div class="section-title">🤝 Soft Skills</div>
+            <div class="form-group">
+                <label>Soft Skills & Personal Attributes <span class="required">*</span></label>
+                <textarea name="soft_skills" rows="3" placeholder="e.g., Leadership, Communication, Problem-solving, Teamwork" required></textarea>
+            </div>
+        </div>
+
+        <!-- SECTION 4 -->
+        <div class="form-section">
+            <div class="section-title">🎓 Education</div>
+            <div class="form-group">
+                <label>Educational Background <span class="required">*</span></label>
+                <input type="text" name="education" placeholder="e.g., B.Tech Computer Science, MBA Finance" required>
+            </div>
+            <div class="form-group">
+                <label>Certifications (if any)</label>
+                <input type="text" name="certifications" placeholder="e.g., AWS, Google Cloud, PMP, CFA">
+            </div>
+        </div>
+
+        <!-- SECTION 5 -->
+        <div class="form-section">
+            <div class="section-title">💼 Work Experience</div>
+            <div class="form-group">
+                <label>Professional Experience <span class="required">*</span></label>
+                <textarea name="experience" rows="3" placeholder="e.g., 2 years software development, worked on ML projects, internship at startup" required></textarea>
+            </div>
+        </div>
+
+        <!-- SECTION 6 -->
+        <div class="form-section">
+            <div class="section-title">💬 Additional Information</div>
+            <div class="form-group">
+                <label>Career Goals</label>
+                <textarea name="goals" rows="3" placeholder="e.g., Want to become a Data Scientist, interested in AI research, aiming for product management"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Number of Recommendations</label>
+                <select name="num_recommendations">
+                    <option value="3">Top 3 Careers</option>
+                    <option value="5" selected>Top 5 Careers</option>
+                    <option value="10">Top 10 Careers</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-submit">
+            <button type="submit" class="btn-submit">🔍 Analyze My Profile</button>
+        </div>
+
+    </form>
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+// Progress bar based on filled fields
+const form = document.getElementById('careerForm');
+const inputs = form.querySelectorAll('input, textarea, select');
+const bar = document.getElementById('progressBar');
+const text = document.getElementById('progressText');
+
+function updateProgress() {
+    let filled = 0;
+    inputs.forEach(input => {
+        if (input.value.trim() !== '') filled++;
+    });
+    const percent = Math.round((filled / inputs.length) * 100);
+    bar.style.width = percent + '%';
+    text.textContent = percent + '% Complete';
+}
+
+inputs.forEach(input => input.addEventListener('input', updateProgress));
+</script>
+
+</body>
+</html>

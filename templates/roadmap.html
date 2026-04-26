@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Roadmap | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/market">Market Trends</a>
+    </div>
+</nav>
+
+<div class="road-hero">
+    <h1>🗺️ Your Career Roadmap</h1>
+    <p>Personalized step-by-step path to your dream career</p>
+    <div class="road-tabs">
+        <button class="road-tab active" onclick="showPhase('short')">6 Months</button>
+        <button class="road-tab" onclick="showPhase('mid')">1 Year</button>
+        <button class="road-tab" onclick="showPhase('long')">3 Years</button>
+    </div>
+</div>
+
+<div class="road-container">
+
+    <!-- OVERALL PROGRESS -->
+    <div class="road-card">
+        <div class="road-card-title">📊 Overall Career Progress</div>
+        <div class="road-row">
+            <div class="road-col">
+                <canvas id="progressRadar"></canvas>
+            </div>
+            <div class="road-col">
+                <div class="progress-list">
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Technical Skills</span><span>85%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar blue" style="width:85%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Communication</span><span>70%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar green" style="width:70%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Leadership</span><span>60%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar orange" style="width:60%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Problem Solving</span><span>90%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar blue" style="width:90%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Industry Knowledge</span><span>55%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar purple" style="width:55%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">
+                            <span>Networking</span><span>45%</span>
+                        </div>
+                        <div class="prog-bar-wrap">
+                            <div class="prog-bar orange" style="width:45%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE CONTENT -->
+    <!-- SHORT TERM -->
+    <div id="phase-short" class="phase-content">
+        <div class="road-card">
+            <div class="road-card-title">🎯 6-Month Goals & Milestones</div>
+            <div class="timeline">
+                <div class="timeline-item done">
+                    <div class="timeline-dot">✅</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 1-2: Foundation</div>
+                        <p>Complete Python & ML basics. Build 2 mini projects.</p>
+                        <div class="timeline-tags">
+                            <span class="tag blue">Python</span>
+                            <span class="tag blue">NumPy</span>
+                            <span class="tag blue">Pandas</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge done-badge">Done</div>
+                </div>
+                <div class="timeline-item active">
+                    <div class="timeline-dot">🔵</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 3-4: Core Skills</div>
+                        <p>Learn ML algorithms, Flask, build career guidance project.</p>
+                        <div class="timeline-tags">
+                            <span class="tag green">Scikit-learn</span>
+                            <span class="tag green">Flask</span>
+                            <span class="tag green">SQL</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge active-badge">In Progress</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 5-6: Portfolio</div>
+                        <p>Deploy projects on GitHub. Apply for internships.</p>
+                        <div class="timeline-tags">
+                            <span class="tag gray">GitHub</span>
+                            <span class="tag gray">Deployment</span>
+                            <span class="tag gray">Resume</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Upcoming</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Milestone Chart -->
+        <div class="road-card">
+            <div class="road-card-title">📈 6-Month Skill Growth Plan</div>
+            <canvas id="shortChart"></canvas>
+        </div>
+    </div>
+
+    <!-- MID TERM -->
+    <div id="phase-mid" class="phase-content" style="display:none">
+        <div class="road-card">
+            <div class="road-card-title">🎯 1-Year Goals & Milestones</div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 7-8: Specialization</div>
+                        <p>Deep dive into Deep Learning & NLP. Complete Coursera ML Specialization.</p>
+                        <div class="timeline-tags">
+                            <span class="tag blue">TensorFlow</span>
+                            <span class="tag blue">NLP</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Upcoming</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 9-10: Internship</div>
+                        <p>Land first internship or freelance project. Build real experience.</p>
+                        <div class="timeline-tags">
+                            <span class="tag green">Internship</span>
+                            <span class="tag green">Real Projects</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Upcoming</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Month 11-12: Job Ready</div>
+                        <p>Apply for full-time roles. Prepare for technical interviews.</p>
+                        <div class="timeline-tags">
+                            <span class="tag gray">DSA</span>
+                            <span class="tag gray">System Design</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Upcoming</div>
+                </div>
+            </div>
+        </div>
+        <div class="road-card">
+            <div class="road-card-title">📈 1-Year Skill Growth Plan</div>
+            <canvas id="midChart"></canvas>
+        </div>
+    </div>
+
+    <!-- LONG TERM -->
+    <div id="phase-long" class="phase-content" style="display:none">
+        <div class="road-card">
+            <div class="road-card-title">🎯 3-Year Goals & Milestones</div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Year 2: Senior Role</div>
+                        <p>Get promoted to senior engineer. Lead team projects.</p>
+                        <div class="timeline-tags">
+                            <span class="tag blue">Leadership</span>
+                            <span class="tag blue">Mentoring</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Future</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">⚪</div>
+                    <div class="timeline-body">
+                        <div class="timeline-title">Year 3: Expert / Lead</div>
+                        <p>Become tech lead or start your own product/startup.</p>
+                        <div class="timeline-tags">
+                            <span class="tag green">Architecture</span>
+                            <span class="tag green">Product</span>
+                        </div>
+                    </div>
+                    <div class="timeline-badge upcoming-badge">Future</div>
+                </div>
+            </div>
+        </div>
+        <div class="road-card">
+            <div class="road-card-title">📈 3-Year Career Growth</div>
+            <canvas id="longChart"></canvas>
+        </div>
+    </div>
+
+    <!-- COURSES -->
+    <div class="road-card">
+        <div class="road-card-title">📚 Recommended Courses</div>
+        <div class="courses-grid">
+            <div class="course-card">
+                <div class="course-badge high">High Priority</div>
+                <div class="course-title">Machine Learning Specialization</div>
+                <div class="course-meta">📍 Coursera · Andrew Ng · 3 months</div>
+                <div class="course-meta">💰 ₹2,000 - ₹8,000</div>
+            </div>
+            <div class="course-card">
+                <div class="course-badge high">High Priority</div>
+                <div class="course-title">Python for Data Science</div>
+                <div class="course-meta">📍 Udemy · 6 weeks</div>
+                <div class="course-meta">💰 ₹500 - ₹2,000</div>
+            </div>
+            <div class="course-card">
+                <div class="course-badge medium">Medium Priority</div>
+                <div class="course-title">AWS Cloud Practitioner</div>
+                <div class="course-meta">📍 AWS · 2 months</div>
+                <div class="course-meta">💰 ₹5,000 - ₹15,000</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-btns">
+        <a href="/market" class="btn-primary">📈 View Market Trends</a>
+        <a href="/form" class="btn-outline-dark">🔄 New Assessment</a>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+// Tab switching
+function showPhase(phase) {
+    document.querySelectorAll('.phase-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.road-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('phase-' + phase).style.display = 'block';
+    event.target.classList.add('active');
+}
+
+// Radar Chart
+new Chart(document.getElementById('progressRadar'), {
+    type: 'radar',
+    data: {
+        labels: ['Technical','Communication','Leadership','Problem Solving','Industry','Networking'],
+        datasets: [{
+            label: 'Current',
+            data: [85, 70, 60, 90, 55, 45],
+            backgroundColor: 'rgba(37,99,235,0.15)',
+            borderColor: '#2563eb',
+            borderWidth: 2,
+            pointBackgroundColor: '#2563eb',
+            pointRadius: 4,
+        },{
+            label: 'Target',
+            data: [95, 85, 80, 95, 85, 75],
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            borderColor: '#10b981',
+            borderWidth: 2,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 4,
+            borderDash: [5,5],
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                min: 0, max: 100,
+                ticks: { stepSize: 20 },
+                grid: { color: '#e2e8f0' },
+                pointLabels: { font: { size: 11, weight: '600' } }
+            }
+        },
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+// Short Term Chart
+new Chart(document.getElementById('shortChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Month 1','Month 2','Month 3','Month 4','Month 5','Month 6'],
+        datasets: [{
+            label: 'Skill Level',
+            data: [20, 35, 50, 65, 78, 85],
+            backgroundColor: '#2563eb',
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Mid Term Chart
+new Chart(document.getElementById('midChart'), {
+    type: 'line',
+    data: {
+        labels: ['M7','M8','M9','M10','M11','M12'],
+        datasets: [{
+            label: 'Skill Level',
+            data: [85, 88, 90, 92, 94, 96],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 5,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { min: 70, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Long Term Chart
+new Chart(document.getElementById('longChart'), {
+    type: 'line',
+    data: {
+        labels: ['Year 1','Year 2','Year 3'],
+        datasets: [
+            {
+                label: 'Salary (LPA)',
+                data: [8, 18, 35],
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.1)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#2563eb',
+                pointRadius: 6,
+            },
+            {
+                label: 'Experience Level',
+                data: [30, 65, 90],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245,158,11,0.08)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#f59e0b',
+                pointRadius: 6,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+            y: { grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

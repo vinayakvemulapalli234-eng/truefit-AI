@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Results | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/market">Market Trends</a>
+        {% if current_user.is_authenticated %}
+            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">👤 {{ current_user.username }}</span>
+            <a href="/logout" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/register" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Register</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="results-hero">
+    <div class="check-circle">✅</div>
+    <h1>Your Career Recommendations</h1>
+    <p>AI analysis complete for <strong>{{ user.username }}</strong></p>
+</div>
+
+<div class="results-container">
+
+    <!-- BEST MATCH -->
+    <div class="best-match-card">
+        <div class="best-match-label">🏆 BEST CAREER MATCH</div>
+        <div class="best-match-title">{{ results[0].career }}</div>
+        <div class="best-match-badge">{{ results[0].confidence }}% Match</div>
+    </div>
+
+    <!-- CONFIDENCE CHART -->
+    <div class="result-card">
+        <div class="result-card-title">📊 Career Match Confidence Scores</div>
+        <div class="chart-box">
+            <canvas id="confidenceChart"></canvas>
+        </div>
+    </div>
+
+    <!-- CAREER LIST -->
+    <div class="result-card">
+        <div class="result-card-title">🎯 Top Career Recommendations</div>
+        <div class="career-list">
+            {% for r in results %}
+            <div class="career-item">
+                <div class="career-rank">#{{ r.rank }}</div>
+                <div class="career-info">
+                    <div class="career-name">{{ r.career }}</div>
+                    <div class="career-bar-wrap">
+                        <div class="career-bar" style="width:{{ r.confidence }}%"></div>
+                    </div>
+                    <div class="career-meta">{{ r.confidence }}% Match</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SKILLS RADAR -->
+    <div class="result-card">
+        <div class="result-card-title">🕸️ Your Skills Profile</div>
+        <div class="chart-box">
+            <canvas id="skillsRadar"></canvas>
+        </div>
+    </div>
+
+    <!-- SALARY CHART -->
+    <div class="result-card">
+        <div class="result-card-title">💰 Expected Salary Ranges (₹ LPA)</div>
+        <div class="chart-box">
+            <canvas id="salaryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="action-btns">
+        <a href="/export_pdf/{{ assessment_id }}" class="btn-primary">📄 Download PDF Report</a>
+        <a href="/roadmap" class="btn-outline-dark">🗺️ Career Roadmap</a>
+        <a href="/market" class="btn-outline-dark">📈 Market Trends</a>
+        <a href="/form" class="btn-outline-dark">🔄 New Assessment</a>
+        <button onclick="window.print()" class="btn-outline-dark">🖨️ Print</button>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+const careers = {{ results | tojson }};
+const labels = careers.map(c => c.career);
+const confidences = careers.map(c => c.confidence);
+
+const salaryMap = {
+    'Data Scientist': [10, 30], 'Software Engineer': [8, 25],
+    'AI/ML Engineer': [12, 35], 'Frontend Developer': [6, 22],
+    'Backend Developer': [7, 24], 'Cloud Engineer': [10, 32],
+    'DevOps Engineer': [8, 28], 'Cybersecurity Analyst': [7, 25],
+    'Product Manager': [15, 40], 'UI/UX Designer': [5, 20],
+    'Data Analyst': [5, 18], 'Financial Analyst': [6, 22],
+    'Digital Marketing Manager': [5, 18], 'Project Manager': [8, 28],
+    'Django Developer': [7, 22], 'Node.js Developer': [7, 24],
+    'Android Developer': [6, 22], 'iOS Developer': [7, 25],
+    'Blockchain Developer': [10, 35], 'NLP Engineer': [12, 32],
+    'Computer Vision Engineer': [12, 33], 'QA Engineer': [5, 18],
+    'Business Analyst': [6, 20], 'HR Manager': [5, 18],
+    'Sales Manager': [6, 25], 'Graphic Designer': [4, 15],
+    'Content Writer': [3, 12], 'Teacher': [3, 10],
+};
+
+function getSalary(career) {
+    return salaryMap[career] || [5, 20];
+}
+
+// Chart 1 - Confidence horizontal bar
+new Chart(document.getElementById('confidenceChart'), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Match %',
+            data: confidences,
+            backgroundColor: ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+// Chart 2 - Skills Radar
+new Chart(document.getElementById('skillsRadar'), {
+    type: 'radar',
+    data: {
+        labels: ['Technical', 'Communication', 'Leadership', 'Creativity', 'Analytical', 'Teamwork'],
+        datasets: [{
+            label: 'Your Skills',
+            data: [85, 70, 65, 75, 88, 80],
+            backgroundColor: 'rgba(37,99,235,0.15)',
+            borderColor: '#2563eb',
+            borderWidth: 2,
+            pointBackgroundColor: '#2563eb',
+            pointRadius: 5,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            r: {
+                min: 0, max: 100,
+                ticks: { stepSize: 20 },
+                grid: { color: '#e2e8f0' },
+                pointLabels: { font: { size: 12, weight: '600' } }
+            }
+        }
+    }
+});
+
+// Chart 3 - Salary
+new Chart(document.getElementById('salaryChart'), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Min (LPA)',
+                data: careers.map(c => getSalary(c.career)[0]),
+                backgroundColor: '#93c5fd',
+                borderRadius: 6,
+            },
+            {
+                label: 'Max (LPA)',
+                data: careers.map(c => getSalary(c.career)[1]),
+                backgroundColor: '#2563eb',
+                borderRadius: 6,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+            y: { ticks: { callback: v => '₹' + v + 'L' }, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

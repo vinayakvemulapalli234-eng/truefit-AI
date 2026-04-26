@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/market">Market Trends</a>
+    </div>
+</nav>
+
+<div class="dash-hero">
+    <h1>System Dashboard</h1>
+    <p>Model performance and system statistics</p>
+</div>
+
+<div class="dash-container">
+
+    <!-- STAT BOXES -->
+    <div class="dash-stats">
+        <div class="dash-stat">
+            <div class="dash-stat-icon">📈</div>
+            <div class="dash-stat-value">95%</div>
+            <div class="dash-stat-label">Model Accuracy</div>
+        </div>
+        <div class="dash-stat">
+            <div class="dash-stat-icon">💼</div>
+            <div class="dash-stat-value">2,400+</div>
+            <div class="dash-stat-label">Career Paths</div>
+        </div>
+        <div class="dash-stat">
+            <div class="dash-stat-icon">🗄️</div>
+            <div class="dash-stat-value">3,000</div>
+            <div class="dash-stat-label">Dataset Size</div>
+        </div>
+        <div class="dash-stat">
+            <div class="dash-stat-icon">🤖</div>
+            <div class="dash-stat-value">Random Forest</div>
+            <div class="dash-stat-label">Model Type</div>
+        </div>
+    </div>
+
+    <!-- ROW 1 - Two charts -->
+    <div class="dash-row">
+
+        <!-- Accuracy Chart -->
+        <div class="dash-card">
+            <div class="dash-card-title">📊 Model Accuracy by Category</div>
+            <canvas id="accuracyChart"></canvas>
+        </div>
+
+        <!-- Users Chart -->
+        <div class="dash-card">
+            <div class="dash-card-title">👥 Assessments Per Month</div>
+            <canvas id="usersChart"></canvas>
+        </div>
+
+    </div>
+
+    <!-- ROW 2 - Two charts -->
+    <div class="dash-row">
+
+        <!-- Career Distribution -->
+        <div class="dash-card">
+            <div class="dash-card-title">🥧 Career Category Distribution</div>
+            <div class="doughnut-wrap">
+                <canvas id="careerDistChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Model Info -->
+        <div class="dash-card">
+            <div class="dash-card-title">⚙️ Model Details</div>
+            <div class="model-info-list">
+                <div class="model-info-row">
+                    <span>Project Name</span>
+                    <strong>AI-Powered Career Guidance System</strong>
+                </div>
+                <div class="model-info-row">
+                    <span>Version</span>
+                    <strong>2.0 - Fixed & Optimized</strong>
+                </div>
+                <div class="model-info-row">
+                    <span>Algorithm</span>
+                    <strong>Random Forest Classifier</strong>
+                </div>
+                <div class="model-info-row">
+                    <span>Training Date</span>
+                    <strong>2025-01-01</strong>
+                </div>
+                <div class="model-info-row">
+                    <span>Best Model</span>
+                    <strong class="badge-green">Random Forest</strong>
+                </div>
+                <div class="model-info-row">
+                    <span>Status</span>
+                    <strong class="badge-green">✅ Active</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ROW 3 - Full width -->
+    <div class="dash-card full">
+        <div class="dash-card-title">📉 Skill Demand Trends (2021-2025)</div>
+        <canvas id="trendChart"></canvas>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+// Chart 1 - Accuracy Bar
+new Chart(document.getElementById('accuracyChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Tech', 'Business', 'Healthcare', 'Arts', 'Law', 'Finance'],
+        datasets: [{
+            label: 'Accuracy %',
+            data: [95, 88, 82, 79, 85, 91],
+            backgroundColor: ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#1d4ed8','#1e40af'],
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                min: 60, max: 100,
+                ticks: { callback: v => v + '%' },
+                grid: { color: '#f1f5f9' }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Chart 2 - Monthly Assessments Line
+new Chart(document.getElementById('usersChart'), {
+    type: 'line',
+    data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        datasets: [{
+            label: 'Assessments',
+            data: [120,180,210,250,300,420,380,490,520,600,680,750],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37,99,235,0.08)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#2563eb',
+            pointRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Chart 3 - Doughnut
+new Chart(document.getElementById('careerDistChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Technology', 'Business', 'Healthcare', 'Finance', 'Arts', 'Law'],
+        datasets: [{
+            data: [35, 22, 15, 14, 8, 6],
+            backgroundColor: ['#2563eb','#f59e0b','#10b981','#8b5cf6','#ef4444','#06b6d4'],
+            borderWidth: 0,
+            hoverOffset: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } }
+        }
+    }
+});
+
+// Chart 4 - Trend Line
+new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+        labels: ['2021','2022','2023','2024','2025'],
+        datasets: [
+            {
+                label: 'AI/ML',
+                data: [40, 55, 70, 85, 95],
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.05)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+            },
+            {
+                label: 'Cloud',
+                data: [35, 48, 60, 72, 88],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16,185,129,0.05)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+            },
+            {
+                label: 'Cybersecurity',
+                data: [30, 40, 52, 65, 80],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245,158,11,0.05)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: {
+            y: {
+                ticks: { callback: v => v + '%' },
+                grid: { color: '#f1f5f9' }
+            },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+
+</body>
+</html>
