@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Questions | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/compare">Compare</a>
+        <a href="/interview">Interview Prep</a>
+        <a href="/market">Market Trends</a>
+        {% if current_user.is_authenticated %}
+            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">👤 {{ current_user.name }}</span>
+            <a href="/logout" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/register" style="background:#fbbf24;color:#1e293b;padding:6px 16px;border-radius:20px;font-weight:700;">Register</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="interview-hero">
+    <h1>🎤 Interview Preparation</h1>
+    <p>Practice top interview questions for your dream career</p>
+</div>
+
+<div class="interview-container">
+
+    <!-- CAREER SELECTOR -->
+    <div class="interview-selector">
+        <div class="selector-inner">
+            <label>Select Your Target Career</label>
+            <select id="careerSelect" onchange="loadQuestions()">
+                <option value="Software Engineer">Software Engineer</option>
+                <option value="Data Scientist">Data Scientist</option>
+                <option value="AI/ML Engineer">AI/ML Engineer</option>
+                <option value="Frontend Developer">Frontend Developer</option>
+                <option value="Backend Developer">Backend Developer</option>
+                <option value="Cloud Engineer">Cloud Engineer</option>
+                <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
+                <option value="Product Manager">Product Manager</option>
+                <option value="UI/UX Designer">UI/UX Designer</option>
+                <option value="Data Analyst">Data Analyst</option>
+                <option value="Android Developer">Android Developer</option>
+                <option value="NLP Engineer">NLP Engineer</option>
+                <option value="Blockchain Developer">Blockchain Developer</option>
+                <option value="Financial Analyst">Financial Analyst</option>
+                <option value="Digital Marketing Manager">Digital Marketing Manager</option>
+                <option value="HR Manager">HR Manager</option>
+                <option value="Project Manager">Project Manager</option>
+                <option value="QA Engineer">QA Engineer</option>
+                <option value="Graphic Designer">Graphic Designer</option>
+            </select>
+            <div class="interview-stats" id="interviewStats"></div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="itabs">
+        <button class="itab active" onclick="switchTab('technical', this)">💻 Technical</button>
+        <button class="itab" onclick="switchTab('behavioral', this)">🤝 Behavioral</button>
+        <button class="itab" onclick="switchTab('hr', this)">👔 HR Round</button>
+        <button class="itab" onclick="switchTab('tips', this)">💡 Tips</button>
+    </div>
+
+    <!-- QUESTIONS AREA -->
+    <div id="tab-technical" class="tab-content">
+        <div class="questions-list" id="technicalList"></div>
+    </div>
+
+    <div id="tab-behavioral" class="tab-content" style="display:none">
+        <div class="questions-list" id="behavioralList"></div>
+    </div>
+
+    <div id="tab-hr" class="tab-content" style="display:none">
+        <div class="questions-list" id="hrList"></div>
+    </div>
+
+    <div id="tab-tips" class="tab-content" style="display:none">
+        <div class="tips-grid" id="tipsList"></div>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+var interviewDB = {
+    'Software Engineer': {
+        technical: [
+            { q: 'What is the difference between a stack and a queue?', a: 'Stack follows LIFO (Last In First Out) — like a pile of plates. Queue follows FIFO (First In First Out) — like a line of people. Stack uses push/pop operations, Queue uses enqueue/dequeue.', level: 'Easy' },
+            { q: 'Explain Object-Oriented Programming principles.', a: 'OOP has 4 pillars: Encapsulation (bundling data and methods), Abstraction (hiding implementation), Inheritance (child class inherits parent), Polymorphism (same method, different behavior).', level: 'Medium' },
+            { q: 'What is the time complexity of binary search?', a: 'O(log n) — Binary search divides the search space in half at each step. It requires a sorted array. Best case O(1), worst case O(log n).', level: 'Easy' },
+            { q: 'What is a RESTful API?', a: 'REST (Representational State Transfer) is an architectural style for APIs. It uses HTTP methods: GET (read), POST (create), PUT (update), DELETE (remove). It is stateless — each request is independent.', level: 'Medium' },
+            { q: 'Explain the difference between SQL and NoSQL databases.', a: 'SQL databases are relational, use structured schema, support ACID properties (MySQL, PostgreSQL). NoSQL databases are non-relational, flexible schema, better for unstructured data (MongoDB, Cassandra).', level: 'Medium' },
+            { q: 'What is a design pattern? Name a few common ones.', a: 'Design patterns are reusable solutions to common problems. Common ones: Singleton (one instance), Factory (object creation), Observer (event handling), MVC (Model-View-Controller architecture).', level: 'Hard' },
+            { q: 'What is the difference between process and thread?', a: 'A process is an independent program with its own memory space. A thread is a lightweight unit within a process sharing the same memory. Threads are faster to create but require synchronization.', level: 'Medium' },
+            { q: 'Explain Git branching strategy.', a: 'Common strategy: main branch for production, develop for integration, feature branches for new features, hotfix for urgent fixes. Use pull requests to merge and code review before merging.', level: 'Easy' },
+        ],
+        behavioral: [
+            { q: 'Tell me about a time you debugged a complex bug.', a: 'Use STAR method: Situation (describe the bug), Task (your role), Action (how you debugged — logs, breakpoints, isolating), Result (what you fixed and learned).', level: 'Common' },
+            { q: 'How do you handle tight deadlines?', a: 'Prioritize tasks, break them into smaller chunks, communicate proactively with the team, avoid perfectionism on non-critical parts, and ask for help when needed.', level: 'Common' },
+            { q: 'Describe a situation where you had to learn a new technology quickly.', a: 'Mention a specific technology, how you used documentation, online courses, side projects to learn fast, and how you applied it successfully in the project.', level: 'Common' },
+            { q: 'How do you handle code reviews — giving and receiving?', a: 'When giving: be constructive, focus on code not person, suggest improvements. When receiving: be open to feedback, ask questions to understand, don\'t take it personally.', level: 'Common' },
+        ],
+        hr: [
+            { q: 'Why do you want to work at our company?', a: 'Research the company beforehand. Talk about their product, tech stack, culture, mission. Connect it to your skills and career goals. Be specific — mention actual products or projects they work on.', level: 'HR' },
+            { q: 'Where do you see yourself in 5 years?', a: 'Show ambition but stay realistic. Example: "I want to grow into a senior engineer role, build scalable systems, and eventually contribute to architectural decisions."', level: 'HR' },
+            { q: 'What is your expected salary?', a: 'Research market rates first. Give a range based on your experience and the market. Say: "Based on my skills and market research, I\'m expecting ₹X-Y LPA, but I\'m open to discussion."', level: 'HR' },
+            { q: 'What are your strengths and weaknesses?', a: 'Strength: Pick something relevant — e.g. problem-solving, attention to detail. Weakness: Pick something real but show you\'re working on it — e.g. "I sometimes overthink, but I\'ve been using time-boxing to manage it."', level: 'HR' },
+        ],
+        tips: [
+            { icon: '📝', title: 'Practice DSA Daily', desc: 'Solve 2-3 LeetCode problems daily. Focus on Arrays, Strings, Trees, Graphs, DP. Use platforms like LeetCode, HackerRank, Codeforces.' },
+            { icon: '🏗️', title: 'Study System Design', desc: 'Learn how to design scalable systems — URL shorteners, chat apps, ride-sharing. Study load balancers, databases, caching, microservices.' },
+            { icon: '💬', title: 'Think Out Loud', desc: 'During technical interviews, always explain your thinking process. Interviewers want to see how you approach problems, not just the final answer.' },
+            { icon: '🔍', title: 'Research the Company', desc: 'Know their tech stack, products, recent news. Check Glassdoor for interview experiences. Prepare 2-3 smart questions to ask the interviewer.' },
+            { icon: '⏱️', title: 'Time Your Answers', desc: 'For coding: 5 min to understand, 15 min to code, 5 min to test. For behavioral: Keep answers under 3 minutes using STAR method.' },
+            { icon: '🤝', title: 'Follow Up After Interview', desc: 'Send a thank-you email within 24 hours. Mention something specific from the interview. This leaves a lasting impression.' },
+        ]
+    },
+    'Data Scientist': {
+        technical: [
+            { q: 'What is the difference between supervised and unsupervised learning?', a: 'Supervised learning uses labeled data to train models (classification, regression). Unsupervised learning finds patterns in unlabeled data (clustering, dimensionality reduction). Semi-supervised uses both.', level: 'Easy' },
+            { q: 'Explain overfitting and how to prevent it.', a: 'Overfitting is when a model learns training data too well but fails on new data. Prevention: cross-validation, regularization (L1/L2), dropout, early stopping, more training data, simpler model.', level: 'Medium' },
+            { q: 'What is the bias-variance tradeoff?', a: 'Bias = error from wrong assumptions (underfitting). Variance = error from sensitivity to training data (overfitting). Goal is to find the sweet spot — low bias AND low variance.', level: 'Hard' },
+            { q: 'Explain precision, recall and F1 score.', a: 'Precision = TP/(TP+FP) — of all predicted positives, how many are correct. Recall = TP/(TP+FN) — of all actual positives, how many did we catch. F1 = harmonic mean of both.', level: 'Medium' },
+            { q: 'What is cross-validation and why do we use it?', a: 'Cross-validation splits data into k folds, trains on k-1 folds and tests on the remaining fold, repeating k times. It gives a more reliable estimate of model performance than a single train-test split.', level: 'Medium' },
+            { q: 'What is the difference between bagging and boosting?', a: 'Bagging (e.g. Random Forest): trains models in parallel on random subsets, averages results — reduces variance. Boosting (e.g. XGBoost): trains models sequentially, each correcting previous errors — reduces bias.', level: 'Hard' },
+            { q: 'How do you handle missing values in a dataset?', a: 'Options: drop rows/columns if few missing, impute with mean/median/mode, use KNN imputation, create a flag column for missingness, or use models that handle missing values natively like XGBoost.', level: 'Easy' },
+            { q: 'What is PCA and when would you use it?', a: 'Principal Component Analysis reduces dimensionality by finding directions of maximum variance. Use it when: too many features, multicollinearity exists, you need to visualize high-dimensional data.', level: 'Hard' },
+        ],
+        behavioral: [
+            { q: 'Describe a data project you\'re most proud of.', a: 'Use STAR: describe the business problem, your data pipeline, the model you built, how you evaluated it, and the business impact (e.g. increased accuracy by X%, saved ₹Y).', level: 'Common' },
+            { q: 'How do you communicate technical findings to non-technical stakeholders?', a: 'Avoid jargon, use visualizations, focus on business impact not technical details. Use stories — "This model can predict which customers will churn 30 days early, saving us ₹50L per quarter."', level: 'Common' },
+            { q: 'How do you handle a situation where your model is not performing well?', a: 'Debug systematically: check data quality, feature engineering, model selection, hyperparameters. Get more data if possible. Understand if the problem itself is solvable.', level: 'Common' },
+            { q: 'How do you stay updated with the latest in ML/AI?', a: 'Follow ArXiv papers, Towards Data Science, ML newsletters, Kaggle competitions, fast.ai courses, Twitter/X ML community, attend conferences like NeurIPS, ICML.', level: 'Common' },
+        ],
+        hr: [
+            { q: 'Why data science specifically?', a: 'Talk about your passion for finding patterns in data, making data-driven decisions, the intersection of statistics and programming. Give a specific example of when data changed your perspective.', level: 'HR' },
+            { q: 'How do you prioritize multiple projects?', a: 'Use a prioritization framework — impact vs effort matrix. Communicate timelines clearly, break work into milestones, and flag blockers early to your manager.', level: 'HR' },
+            { q: 'What tools do you use in your data science workflow?', a: 'Python (pandas, sklearn, tensorflow), Jupyter notebooks for exploration, Git for version control, MLflow for experiment tracking, Docker for deployment, SQL for data extraction.', level: 'HR' },
+            { q: 'Where do you see the future of AI going?', a: 'Mention multimodal AI, LLMs, AI agents, responsible AI, edge AI. Show you follow the field but also think critically about challenges like bias, safety, interpretability.', level: 'HR' },
+        ],
+        tips: [
+            { icon: '📊', title: 'Build a Strong Portfolio', desc: 'Do 3-5 end-to-end Kaggle or personal projects. Include EDA, feature engineering, model building, evaluation. Deploy at least one model as a web app.' },
+            { icon: '🧮', title: 'Know Your Math', desc: 'Be solid on linear algebra, probability, statistics. Expect questions on distributions, hypothesis testing, matrix operations in interviews at top companies.' },
+            { icon: '💻', title: 'Practice SQL', desc: 'Most DS interviews include SQL rounds. Practice window functions, CTEs, GROUP BY, JOIN. Use HackerRank SQL or Mode Analytics practice problems.' },
+            { icon: '📈', title: 'Know Business Metrics', desc: 'Understand KPIs like CTR, churn rate, LTV, CAC. Be able to connect your model\'s performance to business impact.' },
+            { icon: '🔬', title: 'Read ML Papers', desc: 'Read foundational papers: Attention is All You Need, ResNet, XGBoost. Use Papers With Code website. Shows depth of knowledge in interviews.' },
+            { icon: '🎯', title: 'Case Study Practice', desc: 'Practice ML case studies: "How would you build a recommendation system for Netflix?" Practice defining the problem, data, features, model, evaluation, and deployment.' },
+        ]
+    },
+    'AI/ML Engineer': {
+        technical: [
+            { q: 'Explain the transformer architecture.', a: 'Transformers use self-attention mechanism to process sequences. Key components: multi-head attention, positional encoding, feed-forward layers, encoder-decoder structure. Introduced in "Attention Is All You Need" (2017).', level: 'Hard' },
+            { q: 'What is the difference between CNN and RNN?', a: 'CNN (Convolutional Neural Network): best for spatial data like images, uses convolutional filters. RNN (Recurrent Neural Network): best for sequential data like text/time series, has memory through hidden states.', level: 'Medium' },
+            { q: 'What is gradient descent and its variants?', a: 'Gradient descent minimizes loss by moving in direction of steepest descent. Variants: Batch GD (full dataset), SGD (one sample), Mini-batch GD (small batches). Optimizers: Adam, RMSprop, AdaGrad.', level: 'Medium' },
+            { q: 'What is transfer learning?', a: 'Using a pre-trained model (trained on large dataset) as a starting point for a new task. Fine-tune the last layers for your specific task. Saves training time and data. Example: using BERT for sentiment analysis.', level: 'Medium' },
+            { q: 'How do you deploy a machine learning model to production?', a: 'Steps: save model (joblib/pickle), create REST API (Flask/FastAPI), containerize with Docker, deploy to cloud (AWS/GCP/Azure), set up monitoring for model drift, create CI/CD pipeline.', level: 'Hard' },
+            { q: 'What is regularization and why is it important?', a: 'Regularization prevents overfitting by adding a penalty for complexity. L1 (Lasso): adds absolute value of coefficients — can zero out features. L2 (Ridge): adds squared coefficients — shrinks all features.', level: 'Medium' },
+            { q: 'Explain batch normalization.', a: 'Batch normalization normalizes the inputs of each layer to have zero mean and unit variance. Benefits: faster training, allows higher learning rates, acts as regularization, reduces sensitivity to initialization.', level: 'Hard' },
+            { q: 'What is the vanishing gradient problem?', a: 'In deep networks, gradients become very small during backpropagation, making early layers train very slowly. Solutions: ReLU activation, residual connections (ResNet), batch normalization, LSTM for sequences.', level: 'Hard' },
+        ],
+        behavioral: [
+            { q: 'Describe a model you built from scratch and deployed.', a: 'Walk through the complete ML lifecycle: problem definition, data collection, EDA, feature engineering, model selection, training, evaluation, deployment, and monitoring.', level: 'Common' },
+            { q: 'How do you handle model drift in production?', a: 'Monitor input data distribution and model performance metrics. Set up alerts for drift detection. Schedule regular retraining with new data. Use tools like MLflow, Evidently AI, Seldon.', level: 'Common' },
+            { q: 'How do you balance model accuracy vs inference speed?', a: 'Techniques: model quantization, pruning, knowledge distillation, using lighter architectures (MobileNet), caching predictions, batching requests. The right tradeoff depends on the use case.', level: 'Common' },
+            { q: 'Tell me about a failed ML project and what you learned.', a: 'Be honest. Talk about incorrect assumptions, data quality issues, or wrong model choice. Focus on what you learned: importance of EDA, starting simple, continuous evaluation.', level: 'Common' },
+        ],
+        hr: [
+            { q: 'What excites you most about AI right now?', a: 'Mention recent developments: LLMs, multimodal AI, AI agents, robotics. Show genuine curiosity. Connect it to how it impacts the real world and your work.', level: 'HR' },
+            { q: 'How do you approach ethical concerns in AI?', a: 'Discuss bias in data and models, fairness metrics, explainability (SHAP, LIME), privacy concerns, responsible deployment. Show you think beyond just accuracy.', level: 'HR' },
+            { q: 'What is your experience with MLOps?', a: 'Mention tools: MLflow for experiment tracking, DVC for data versioning, Airflow for pipelines, Docker/Kubernetes for deployment, Prometheus/Grafana for monitoring.', level: 'HR' },
+            { q: 'How do you keep your ML skills sharp?', a: 'Kaggle competitions, reading ArXiv papers, implementing papers from scratch, following ML Twitter/X community, taking courses (fast.ai, Coursera), building personal projects.', level: 'HR' },
+        ],
+        tips: [
+            { icon: '🧠', title: 'Implement Papers', desc: 'Pick famous ML papers (ResNet, BERT, GAN) and implement them from scratch in PyTorch. This shows deep understanding and impresses interviewers at top AI companies.' },
+            { icon: '🏆', title: 'Compete on Kaggle', desc: 'Aim for top 10% in at least 2-3 Kaggle competitions. It shows practical ML skills, ability to work with real messy data, and competitive benchmarking.' },
+            { icon: '⚙️', title: 'Learn MLOps', desc: 'Know how to deploy models: Docker, FastAPI, AWS SageMaker or GCP Vertex AI. Companies want engineers who can take models to production, not just notebooks.' },
+            { icon: '📐', title: 'Master Linear Algebra', desc: 'Deep learning interviews often include: matrix multiplication, eigenvectors, SVD, dot products. Know why these matter in neural networks.' },
+            { icon: '🔬', title: 'Stay on Cutting Edge', desc: 'Follow Andrej Karpathy, Yann LeCun, Geoffrey Hinton on social media. Read Hugging Face blog, OpenAI research, DeepMind publications.' },
+            { icon: '🛠️', title: 'Build End-to-End Projects', desc: 'Build projects that go from raw data to deployed API. Example: sentiment analysis API, image classifier app, recommendation system. Put them on GitHub with clean code.' },
+        ]
+    },
+    'Product Manager': {
+        technical: [
+            { q: 'How do you prioritize features in a product backlog?', a: 'Use frameworks like RICE (Reach, Impact, Confidence, Effort), MoSCoW (Must, Should, Could, Won\'t), or Kano model. Always align with business goals and user needs.', level: 'Medium' },
+            { q: 'What metrics would you use to measure product success?', a: 'Depends on the product. Common metrics: DAU/MAU, retention rate, churn rate, NPS, conversion rate, LTV, CAC, time-to-value. Always align metrics to business objectives.', level: 'Medium' },
+            { q: 'How do you define and measure product-market fit?', a: 'Sean Ellis test: 40%+ users would be "very disappointed" if product disappeared. Also measure retention curves (flat = good), organic growth, NPS scores, and user engagement depth.', level: 'Hard' },
+            { q: 'Explain agile methodology and how you use it.', a: 'Agile: iterative development in sprints (1-2 weeks). Ceremonies: sprint planning, daily standup, sprint review, retrospective. Use Jira/Linear for tracking. PM writes user stories with acceptance criteria.', level: 'Easy' },
+            { q: 'How do you run an A/B test?', a: 'Define hypothesis, identify metrics, calculate sample size, randomly split users, run test for statistical significance, analyze results. Watch out for novelty effect, network effects, and multiple testing.', level: 'Hard' },
+            { q: 'What is a PRD and what does it include?', a: 'Product Requirements Document: executive summary, problem statement, user personas, user stories, success metrics, technical requirements, timeline, open questions. It aligns engineering, design, and business.', level: 'Medium' },
+        ],
+        behavioral: [
+            { q: 'Tell me about a product you launched. What was the outcome?', a: 'Use STAR: describe the product, your role, the process (research, roadmap, execution), launch strategy, and measurable outcomes (user growth, revenue, engagement).', level: 'Common' },
+            { q: 'How do you handle disagreements with engineering about timelines?', a: 'Listen to technical concerns, understand constraints, negotiate scope (MVP vs full feature), use data to prioritize, find creative solutions. Always maintain a collaborative relationship.', level: 'Common' },
+            { q: 'How do you gather and incorporate user feedback?', a: 'User interviews, surveys, NPS, analytics, support tickets, app store reviews, usability testing. Synthesize feedback into themes, prioritize by frequency and impact, validate with data.', level: 'Common' },
+            { q: 'Describe a time you made a decision with incomplete data.', a: 'Acknowledge the ambiguity, explain how you gathered what data was available, the framework you used to decide, how you mitigated risk, and what you learned from the outcome.', level: 'Common' },
+        ],
+        hr: [
+            { q: 'Why product management?', a: 'Talk about being at the intersection of technology, business, and user experience. Mention your interest in solving real user problems at scale and leading cross-functional teams without direct authority.', level: 'HR' },
+            { q: 'What is your favorite product and why?', a: 'Pick a product you genuinely use. Analyze: what problem it solves, why it\'s well-designed, what you would improve, how it makes money. Show product thinking, not just personal preference.', level: 'HR' },
+            { q: 'How do you work with designers?', a: 'Provide clear problem statements and user research, not solutions. Give space for creativity, give feedback on user goals not aesthetics, involve them early in discovery, advocate for design quality.', level: 'HR' },
+            { q: 'How do you say no to a stakeholder request?', a: 'Never say "no" directly. Say "not now" with reasons: priority conflicts, resource constraints, strategic alignment. Show data, offer alternatives, keep them informed on the roadmap.', level: 'HR' },
+        ],
+        tips: [
+            { icon: '📋', title: 'Learn Product Frameworks', desc: 'Master: CIRCLES method, RICE scoring, Jobs-to-be-Done, North Star metric. Practice applying them to products you use daily.' },
+            { icon: '📊', title: 'Know Analytics Tools', desc: 'Learn Google Analytics, Mixpanel, Amplitude. Understand funnel analysis, cohort analysis, retention curves. SQL basics are essential for data-driven PMs.' },
+            { icon: '🎨', title: 'Understand Design Basics', desc: 'Learn Figma basics, understand UX principles, know what makes a good user flow. You don\'t need to design but need to evaluate design decisions.' },
+            { icon: '💼', title: 'Practice Case Interviews', desc: 'Practice: "Design a product for X", "How would you improve Y?", "What metrics for Z?". Use frameworks but show genuine curiosity and structured thinking.' },
+            { icon: '🗣️', title: 'Develop Executive Presence', desc: 'PMs need to influence without authority. Practice clear communication, storytelling with data, running effective meetings, and presenting to senior leadership.' },
+            { icon: '🔍', title: 'Do Competitive Analysis', desc: 'Before interviews, deeply analyze the company\'s product and competitors. Come with 3 specific improvement ideas backed by user research thinking.' },
+        ]
+    },
+};
+
+// Default questions for careers not in DB
+var defaultData = {
+    technical: [
+        { q: 'Walk me through your technical background and key skills.', a: 'Structure your answer: education, key technical skills, tools you use daily, biggest technical project, and what you are currently learning.', level: 'Easy' },
+        { q: 'How do you approach solving a complex technical problem?', a: 'Break it down: understand requirements, research existing solutions, design the approach, implement incrementally, test thoroughly, document. Mention tools like debugging, logging, and peer review.', level: 'Medium' },
+        { q: 'Describe your experience with version control systems.', a: 'Git is standard. Mention branching strategies, pull requests, code reviews, resolving merge conflicts, git flow or trunk-based development depending on team size.', level: 'Easy' },
+        { q: 'How do you ensure the quality of your work?', a: 'Code reviews, unit testing, integration testing, documentation, following coding standards, using linters, continuous integration pipelines, and peer feedback.', level: 'Medium' },
+        { q: 'What technologies are you most excited to learn?', a: 'Show genuine curiosity. Mention 2-3 specific technologies relevant to the role, why they excite you, and how you are already learning them (courses, projects, etc.).', level: 'Easy' },
+        { q: 'How do you stay updated with industry trends?', a: 'Follow industry blogs, newsletters, podcasts. Attend meetups or conferences. Contribute to open source. Participate in online communities like Stack Overflow, Reddit, GitHub.', level: 'Easy' },
+    ],
+    behavioral: [
+        { q: 'Tell me about yourself.', a: 'Keep it professional and relevant: current role/education, key skills, major achievement, why you are interested in this role. Keep it under 2 minutes.', level: 'Common' },
+        { q: 'What is your greatest professional achievement?', a: 'Pick something quantifiable and relevant. Use STAR method. Focus on your specific contribution, the challenge you overcame, and the measurable impact.', level: 'Common' },
+        { q: 'How do you handle working under pressure?', a: 'Give a specific example. Show that you stay calm, prioritize effectively, communicate proactively, and deliver results even under constraints.', level: 'Common' },
+        { q: 'Describe a time you worked in a team and faced conflict.', a: 'Focus on how you resolved it constructively: listened to understand, found common ground, kept focus on the shared goal, and maintained the relationship.', level: 'Common' },
+    ],
+    hr: [
+        { q: 'Why are you leaving your current job/college?', a: 'Keep it positive. Focus on growth opportunities, new challenges, excitement about this specific role/company. Never speak negatively about your current/previous employer.', level: 'HR' },
+        { q: 'What motivates you?', a: 'Be authentic. Common genuine motivators: solving challenging problems, seeing your work impact users, continuous learning, collaborating with smart people, building something meaningful.', level: 'HR' },
+        { q: 'Do you have any questions for us?', a: 'Always ask 2-3 thoughtful questions: team culture, biggest challenges, growth opportunities, what success looks like in 6 months. Avoid asking about salary at this stage.', level: 'HR' },
+        { q: 'Are you interviewing elsewhere?', a: 'Be honest but strategic. "Yes I am exploring a few opportunities, but I am very excited about this role because..." Shows you are in demand but genuinely interested.', level: 'HR' },
+    ],
+    tips: [
+        { icon: '🎯', title: 'Research Thoroughly', desc: 'Study the company: products, tech stack, recent news, culture, Glassdoor reviews. Show you have done your homework — interviewers notice and appreciate it.' },
+        { icon: '📝', title: 'Prepare Your Stories', desc: 'Have 5-6 STAR stories ready covering: achievement, failure, conflict, leadership, teamwork, learning. Adapt them to different questions.' },
+        { icon: '👔', title: 'Dress Appropriately', desc: 'For tech companies: smart casual is usually fine. For banks/consulting: formal. When in doubt, overdress slightly. First impressions matter.' },
+        { icon: '⏰', title: 'Be Punctual', desc: 'For in-person: arrive 10 minutes early. For virtual: test your setup 30 minutes before. Log in 5 minutes early. Nothing signals disrespect like being late.' },
+        { icon: '🤝', title: 'Build Rapport', desc: 'Interviews are two-way conversations. Be genuinely curious about the interviewer\'s experience. Smile, make eye contact, show enthusiasm without being over-the-top.' },
+        { icon: '📧', title: 'Follow Up', desc: 'Send a personalized thank-you email within 24 hours mentioning something specific from the conversation. It makes you memorable and shows professionalism.' },
+    ]
+};
+
+function getCareerData(career) {
+    return interviewDB[career] || defaultData;
+}
+
+function getLevelClass(level) {
+    if (level === 'Easy') return 'level-easy';
+    if (level === 'Medium') return 'level-medium';
+    if (level === 'Hard') return 'level-hard';
+    if (level === 'Common') return 'level-common';
+    if (level === 'HR') return 'level-hr';
+    return 'level-easy';
+}
+
+function renderQuestions(questions, containerId) {
+    var container = document.getElementById(containerId);
+    container.innerHTML = '';
+    questions.forEach(function(q, i) {
+        container.innerHTML += `
+        <div class="question-card">
+            <div class="question-header" onclick="toggleAnswer(${i}, '${containerId}')">
+                <div class="question-left">
+                    <span class="q-num">Q${i+1}</span>
+                    <span class="q-level ${getLevelClass(q.level)}">${q.level}</span>
+                </div>
+                <div class="q-text">${q.q}</div>
+                <div class="q-toggle" id="toggle-${containerId}-${i}">▼</div>
+            </div>
+            <div class="question-answer" id="answer-${containerId}-${i}" style="display:none">
+                <div class="answer-label">💡 Sample Answer:</div>
+                <div class="answer-text">${q.a}</div>
+            </div>
+        </div>`;
+    });
+}
+
+function toggleAnswer(idx, containerId) {
+    var answer = document.getElementById('answer-' + containerId + '-' + idx);
+    var toggle = document.getElementById('toggle-' + containerId + '-' + idx);
+    if (answer.style.display === 'none') {
+        answer.style.display = 'block';
+        toggle.textContent = '▲';
+    } else {
+        answer.style.display = 'none';
+        toggle.textContent = '▼';
+    }
+}
+
+function renderTips(tips) {
+    var container = document.getElementById('tipsList');
+    container.innerHTML = '';
+    tips.forEach(function(tip) {
+        container.innerHTML += `
+        <div class="tip-card">
+            <div class="tip-icon">${tip.icon}</div>
+            <div class="tip-title">${tip.title}</div>
+            <div class="tip-desc">${tip.desc}</div>
+        </div>`;
+    });
+}
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-content').forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll('.itab').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('tab-' + tab).style.display = 'block';
+    btn.classList.add('active');
+}
+
+function loadQuestions() {
+    var career = document.getElementById('careerSelect').value;
+    var data = getCareerData(career);
+
+    document.getElementById('interviewStats').innerHTML = `
+        <span class="istat">💻 ${data.technical.length} Technical</span>
+        <span class="istat">🤝 ${data.behavioral.length} Behavioral</span>
+        <span class="istat">👔 ${data.hr.length} HR</span>
+        <span class="istat">💡 ${data.tips.length} Tips</span>`;
+
+    renderQuestions(data.technical, 'technicalList');
+    renderQuestions(data.behavioral, 'behavioralList');
+    renderQuestions(data.hr, 'hrList');
+    renderTips(data.tips);
+}
+
+loadQuestions();
+</script>
+
+</body>
+</html>

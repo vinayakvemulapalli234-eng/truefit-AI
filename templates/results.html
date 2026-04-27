@@ -18,11 +18,11 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/market">Market Trends</a>
         {% if current_user.is_authenticated %}
-            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">👤 {{ current_user.username }}</span>
-            <a href="/logout" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Logout</a>
+            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">Hi, {{ current_user.name }}!</span>
+            <a href="/logout" style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:8px;">Logout</a>
         {% else %}
-            <a href="/login">Login</a>
-            <a href="/register" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Register</a>
+            <a href="/login" style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:8px;">Login</a>
+            <a href="/register" style="background:#fbbf24;color:#1e293b;padding:8px 16px;border-radius:8px;font-weight:700;">Register</a>
         {% endif %}
     </div>
 </nav>
@@ -30,7 +30,7 @@
 <div class="results-hero">
     <div class="check-circle">✅</div>
     <h1>Your Career Recommendations</h1>
-    <p>AI analysis complete for <strong>{{ user.username }}</strong></p>
+    <p>Based on real AI analysis of your profile, {{ user_name }}</p>
 </div>
 
 <div class="results-container">
@@ -38,8 +38,8 @@
     <!-- BEST MATCH -->
     <div class="best-match-card">
         <div class="best-match-label">🏆 BEST CAREER MATCH</div>
-        <div class="best-match-title">{{ results[0].career }}</div>
-        <div class="best-match-badge">{{ results[0].confidence }}% Match</div>
+        <div class="best-match-title">{{ top_career }}</div>
+        <div class="best-match-badge">{{ top_confidence }}% Match Confidence</div>
     </div>
 
     <!-- CONFIDENCE CHART -->
@@ -47,25 +47,6 @@
         <div class="result-card-title">📊 Career Match Confidence Scores</div>
         <div class="chart-box">
             <canvas id="confidenceChart"></canvas>
-        </div>
-    </div>
-
-    <!-- CAREER LIST -->
-    <div class="result-card">
-        <div class="result-card-title">🎯 Top Career Recommendations</div>
-        <div class="career-list">
-            {% for r in results %}
-            <div class="career-item">
-                <div class="career-rank">#{{ r.rank }}</div>
-                <div class="career-info">
-                    <div class="career-name">{{ r.career }}</div>
-                    <div class="career-bar-wrap">
-                        <div class="career-bar" style="width:{{ r.confidence }}%"></div>
-                    </div>
-                    <div class="career-meta">{{ r.confidence }}% Match</div>
-                </div>
-            </div>
-            {% endfor %}
         </div>
     </div>
 
@@ -77,6 +58,25 @@
         </div>
     </div>
 
+    <!-- CAREER LIST -->
+    <div class="result-card">
+        <div class="result-card-title">🎯 All Career Recommendations</div>
+        <div class="career-list">
+            {% for p in predictions %}
+            <div class="career-item">
+                <div class="career-rank">#{{ loop.index }}</div>
+                <div class="career-info">
+                    <div class="career-name">{{ p.career }}</div>
+                    <div class="career-bar-wrap">
+                        <div class="career-bar" style="width:{{ p.confidence }}%"></div>
+                    </div>
+                    <div class="career-meta">{{ p.confidence }}% Match Confidence</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- SALARY CHART -->
     <div class="result-card">
         <div class="result-card-title">💰 Expected Salary Ranges (₹ LPA)</div>
@@ -85,14 +85,53 @@
         </div>
     </div>
 
-    <!-- ACTIONS -->
-    <div class="action-btns">
-        <a href="/export_pdf/{{ assessment_id }}" class="btn-primary">📄 Download PDF Report</a>
-        <a href="/roadmap" class="btn-outline-dark">🗺️ Career Roadmap</a>
-        <a href="/market" class="btn-outline-dark">📈 Market Trends</a>
-        <a href="/form" class="btn-outline-dark">🔄 New Assessment</a>
-        <button onclick="window.print()" class="btn-outline-dark">🖨️ Print</button>
+    <!-- CODING REQUIREMENTS -->
+    <div class="result-card">
+        <div class="result-card-title">💻 Coding Requirements for {{ top_career }}</div>
+        <div class="coding-grid" id="codingGrid"></div>
     </div>
+
+    <!-- CERTIFICATIONS -->
+    <div class="result-card">
+        <div class="result-card-title">🏆 Top Certifications to Get</div>
+        <div class="cert-list" id="certList"></div>
+    </div>
+
+    <!-- TOP COMPANIES -->
+    <div class="result-card">
+        <div class="result-card-title">💼 Top Companies Hiring</div>
+        <div class="company-grid" id="companyGrid"></div>
+    </div>
+
+    <!-- FREE COURSES -->
+    <div class="result-card">
+        <div class="result-card-title">🔗 Free & Paid Course Links</div>
+        <div class="courses-list" id="coursesList"></div>
+    </div>
+
+    <!-- YOUTUBE RECOMMENDATIONS -->
+    <div class="result-card">
+        <div class="result-card-title">▶️ YouTube Channels to Follow</div>
+        <div class="yt-grid" id="ytGrid"></div>
+    </div>
+
+    <!-- BOOKS -->
+    <div class="result-card">
+        <div class="result-card-title">📚 Must-Read Books</div>
+        <div class="books-grid" id="booksGrid"></div>
+    </div>
+
+    <!-- PDF EXPORT -->
+    <form action="/export-pdf" method="POST">
+        <input type="hidden" name="top_career" value="{{ top_career }}">
+        <input type="hidden" name="predictions" value="{% for p in predictions %}{{ p.career }} ({{ p.confidence }}%){% if not loop.last %},{% endif %}{% endfor %}">
+        <div class="action-btns">
+            <button type="submit" class="btn-primary">📄 Download PDF Report</button>
+            <a href="/roadmap" class="btn-outline-dark">🗺️ View Roadmap</a>
+            <a href="/market" class="btn-outline-dark">📈 Market Trends</a>
+            <a href="/form" class="btn-outline-dark">🔄 New Assessment</a>
+        </div>
+    </form>
 
 </div>
 
@@ -101,42 +140,22 @@
 </footer>
 
 <script>
-const careers = {{ results | tojson }};
-const labels = careers.map(c => c.career);
-const confidences = careers.map(c => c.confidence);
+var predictions = {{ predictions | tojson }};
+var topCareer = "{{ top_career }}";
+var labels = predictions.map(function(p) { return p.career; });
+var scores = predictions.map(function(p) { return p.confidence; });
 
-const salaryMap = {
-    'Data Scientist': [10, 30], 'Software Engineer': [8, 25],
-    'AI/ML Engineer': [12, 35], 'Frontend Developer': [6, 22],
-    'Backend Developer': [7, 24], 'Cloud Engineer': [10, 32],
-    'DevOps Engineer': [8, 28], 'Cybersecurity Analyst': [7, 25],
-    'Product Manager': [15, 40], 'UI/UX Designer': [5, 20],
-    'Data Analyst': [5, 18], 'Financial Analyst': [6, 22],
-    'Digital Marketing Manager': [5, 18], 'Project Manager': [8, 28],
-    'Django Developer': [7, 22], 'Node.js Developer': [7, 24],
-    'Android Developer': [6, 22], 'iOS Developer': [7, 25],
-    'Blockchain Developer': [10, 35], 'NLP Engineer': [12, 32],
-    'Computer Vision Engineer': [12, 33], 'QA Engineer': [5, 18],
-    'Business Analyst': [6, 20], 'HR Manager': [5, 18],
-    'Sales Manager': [6, 25], 'Graphic Designer': [4, 15],
-    'Content Writer': [3, 12], 'Teacher': [3, 10],
-};
-
-function getSalary(career) {
-    return salaryMap[career] || [5, 20];
-}
-
-// Chart 1 - Confidence horizontal bar
+// ── CHART 1: Confidence ──
 new Chart(document.getElementById('confidenceChart'), {
     type: 'bar',
     data: {
         labels: labels,
         datasets: [{
             label: 'Match %',
-            data: confidences,
+            data: scores,
             backgroundColor: ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
             borderRadius: 8,
-            borderSkipped: false,
+            borderSkipped: false
         }]
     },
     options: {
@@ -144,17 +163,17 @@ new Chart(document.getElementById('confidenceChart'), {
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {
-            x: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+            x: { min: 0, max: 100, ticks: { callback: function(v){ return v+'%'; } }, grid: { color: '#f1f5f9' } },
             y: { grid: { display: false } }
         }
     }
 });
 
-// Chart 2 - Skills Radar
+// ── CHART 2: Radar ──
 new Chart(document.getElementById('skillsRadar'), {
     type: 'radar',
     data: {
-        labels: ['Technical', 'Communication', 'Leadership', 'Creativity', 'Analytical', 'Teamwork'],
+        labels: ['Technical','Communication','Leadership','Creativity','Analytical','Teamwork'],
         datasets: [{
             label: 'Your Skills',
             data: [85, 70, 65, 75, 88, 80],
@@ -162,7 +181,7 @@ new Chart(document.getElementById('skillsRadar'), {
             borderColor: '#2563eb',
             borderWidth: 2,
             pointBackgroundColor: '#2563eb',
-            pointRadius: 5,
+            pointRadius: 5
         }]
     },
     options: {
@@ -179,34 +198,267 @@ new Chart(document.getElementById('skillsRadar'), {
     }
 });
 
-// Chart 3 - Salary
+// ── CHART 3: Salary ──
+var salaryData = {
+    'Data Scientist': [10,30], 'Software Engineer': [8,25],
+    'AI/ML Engineer': [12,35], 'Product Manager': [15,40],
+    'Cloud Engineer': [10,32], 'Frontend Developer': [6,22],
+    'Backend Developer': [7,24], 'DevOps Engineer': [8,28],
+    'Cybersecurity Analyst': [8,26], 'UI/UX Designer': [5,20],
+    'Data Analyst': [6,20], 'Android Developer': [6,22],
+    'NLP Engineer': [12,35], 'Blockchain Developer': [10,30],
+    'QA Engineer': [5,18], 'Financial Analyst': [8,28],
+    'Digital Marketing Manager': [5,18], 'HR Manager': [5,16],
+    'Project Manager': [10,35], 'Graphic Designer': [3,12],
+    'Content Writer': [3,12], 'Civil Engineer': [4,15],
+    'Mechanical Engineer': [4,15], 'Teacher': [3,10],
+    'Event Manager': [3,12]
+};
+var salaryLabels = labels.slice(0,5);
+var minS = salaryLabels.map(function(l){ return salaryData[l] ? salaryData[l][0] : 5; });
+var maxS = salaryLabels.map(function(l){ return salaryData[l] ? salaryData[l][1] : 20; });
+
 new Chart(document.getElementById('salaryChart'), {
     type: 'bar',
     data: {
-        labels: labels,
+        labels: salaryLabels,
         datasets: [
-            {
-                label: 'Min (LPA)',
-                data: careers.map(c => getSalary(c.career)[0]),
-                backgroundColor: '#93c5fd',
-                borderRadius: 6,
-            },
-            {
-                label: 'Max (LPA)',
-                data: careers.map(c => getSalary(c.career)[1]),
-                backgroundColor: '#2563eb',
-                borderRadius: 6,
-            }
+            { label: 'Min (LPA)', data: minS, backgroundColor: '#93c5fd', borderRadius: 6 },
+            { label: 'Max (LPA)', data: maxS, backgroundColor: '#2563eb', borderRadius: 6 }
         ]
     },
     options: {
         responsive: true,
         plugins: { legend: { position: 'top' } },
         scales: {
-            y: { ticks: { callback: v => '₹' + v + 'L' }, grid: { color: '#f1f5f9' } },
+            y: { ticks: { callback: function(v){ return '₹'+v+'L'; } }, grid: { color: '#f1f5f9' } },
             x: { grid: { display: false } }
         }
     }
+});
+
+// ── CAREER DATA ──
+var careerData = {
+    'Data Scientist': {
+        coding: [
+            { lang: 'Python', level: 95, color: '#2563eb' },
+            { lang: 'R', level: 70, color: '#10b981' },
+            { lang: 'SQL', level: 80, color: '#f59e0b' },
+            { lang: 'TensorFlow/Keras', level: 75, color: '#8b5cf6' },
+            { lang: 'Spark/Hadoop', level: 60, color: '#ef4444' }
+        ],
+        certs: ['Google Professional Data Engineer', 'IBM Data Science Certificate', 'Coursera ML Specialization', 'AWS Machine Learning Specialty', 'Microsoft Azure Data Scientist'],
+        companies: ['Google', 'Amazon', 'Microsoft', 'Flipkart', 'Swiggy', 'Zomato', 'Paytm', 'TCS'],
+        courses: [
+            { name: 'ML Specialization — Andrew Ng', link: 'https://coursera.org/specializations/machine-learning-introduction', price: 'Free Audit' },
+            { name: 'Python for Data Science — IBM', link: 'https://coursera.org/learn/python-for-applied-data-science-ai', price: 'Free Audit' },
+            { name: 'Data Science Bootcamp — Udemy', link: 'https://udemy.com/course/the-data-science-course-complete-data-science-bootcamp', price: '₹499' },
+            { name: 'Fast.ai Deep Learning', link: 'https://fast.ai', price: 'Free' }
+        ],
+        youtube: [
+            { channel: 'Sentdex', topic: 'Python & ML tutorials', icon: '🐍' },
+            { channel: 'StatQuest with Josh Starmer', topic: 'ML concepts explained simply', icon: '📊' },
+            { channel: 'Ken Jee', topic: 'Data Science career advice', icon: '💼' },
+            { channel: '3Blue1Brown', topic: 'Math & Neural Networks', icon: '🧠' },
+            { channel: 'Krish Naik', topic: 'ML/DL projects in Hindi/English', icon: '🎯' }
+        ],
+        books: [
+            { title: 'Hands-On Machine Learning', author: 'Aurélien Géron', icon: '📘' },
+            { title: 'Python for Data Analysis', author: 'Wes McKinney', icon: '📗' },
+            { title: 'The Hundred-Page ML Book', author: 'Andriy Burkov', icon: '📙' },
+            { title: 'Deep Learning', author: 'Ian Goodfellow', icon: '📕' }
+        ]
+    },
+    'Software Engineer': {
+        coding: [
+            { lang: 'Python/Java', level: 90, color: '#2563eb' },
+            { lang: 'Data Structures', level: 95, color: '#10b981' },
+            { lang: 'SQL', level: 75, color: '#f59e0b' },
+            { lang: 'System Design', level: 80, color: '#8b5cf6' },
+            { lang: 'Git/DevOps', level: 70, color: '#ef4444' }
+        ],
+        certs: ['Google Associate Cloud Engineer', 'Oracle Java Certification', 'AWS Developer Associate', 'LeetCode Top 150', 'HackerRank Gold Badge'],
+        companies: ['Google', 'Microsoft', 'Amazon', 'Infosys', 'Wipro', 'TCS', 'Flipkart', 'Razorpay'],
+        courses: [
+            { name: 'DSA — Abdul Bari', link: 'https://udemy.com/course/datastructurescncpp', price: '₹499' },
+            { name: 'CS50 — Harvard', link: 'https://cs50.harvard.edu', price: 'Free' },
+            { name: 'System Design — Gaurav Sen', link: 'https://youtube.com/@gkcs', price: 'Free' },
+            { name: 'FAANG Interview Prep', link: 'https://leetcode.com', price: 'Free/Premium' }
+        ],
+        youtube: [
+            { channel: 'Abdul Bari', topic: 'DSA & Algorithms', icon: '🧮' },
+            { channel: 'Gaurav Sen', topic: 'System Design', icon: '🏗️' },
+            { channel: 'Striver (TakeUForward)', topic: 'DSA & CP', icon: '💪' },
+            { channel: 'Tech With Tim', topic: 'Python projects', icon: '🐍' },
+            { channel: 'NeetCode', topic: 'LeetCode solutions', icon: '🎯' }
+        ],
+        books: [
+            { title: 'Clean Code', author: 'Robert C. Martin', icon: '📘' },
+            { title: 'Cracking the Coding Interview', author: 'Gayle McDowell', icon: '📗' },
+            { title: 'Designing Data-Intensive Apps', author: 'Martin Kleppmann', icon: '📙' },
+            { title: 'The Pragmatic Programmer', author: 'Hunt & Thomas', icon: '📕' }
+        ]
+    },
+    'AI/ML Engineer': {
+        coding: [
+            { lang: 'Python', level: 95, color: '#2563eb' },
+            { lang: 'TensorFlow/PyTorch', level: 90, color: '#10b981' },
+            { lang: 'Mathematics/Stats', level: 85, color: '#f59e0b' },
+            { lang: 'MLOps/Docker', level: 70, color: '#8b5cf6' },
+            { lang: 'SQL/NoSQL', level: 65, color: '#ef4444' }
+        ],
+        certs: ['TensorFlow Developer Certificate', 'AWS ML Specialty', 'Google ML Engineer', 'Deep Learning Specialization', 'MLOps Specialization'],
+        companies: ['Google DeepMind', 'OpenAI', 'Microsoft AI', 'Amazon AI', 'NVIDIA', 'Fractal Analytics', 'Tiger Analytics'],
+        courses: [
+            { name: 'Deep Learning Specialization', link: 'https://coursera.org/specializations/deep-learning', price: 'Free Audit' },
+            { name: 'Fast.ai Practical DL', link: 'https://course.fast.ai', price: 'Free' },
+            { name: 'MLOps Specialization', link: 'https://coursera.org/specializations/machine-learning-engineering-for-production-mlops', price: 'Free Audit' },
+            { name: 'Kaggle Courses', link: 'https://kaggle.com/learn', price: 'Free' }
+        ],
+        youtube: [
+            { channel: 'Andrej Karpathy', topic: 'Deep Learning from scratch', icon: '🧠' },
+            { channel: 'Yannic Kilcher', topic: 'AI Paper reviews', icon: '📄' },
+            { channel: 'Two Minute Papers', topic: 'Latest AI research', icon: '🔬' },
+            { channel: 'Krish Naik', topic: 'ML/DL projects', icon: '🎯' },
+            { channel: 'AI Engineering', topic: 'Production ML', icon: '⚙️' }
+        ],
+        books: [
+            { title: 'Deep Learning', author: 'Ian Goodfellow', icon: '📘' },
+            { title: 'Pattern Recognition & ML', author: 'Christopher Bishop', icon: '📗' },
+            { title: 'Hands-On ML with Scikit-Learn', author: 'Aurélien Géron', icon: '📙' },
+            { title: 'Mathematics for ML', author: 'Deisenroth et al.', icon: '📕' }
+        ]
+    },
+    'Frontend Developer': {
+        coding: [
+            { lang: 'HTML/CSS', level: 95, color: '#2563eb' },
+            { lang: 'JavaScript', level: 90, color: '#10b981' },
+            { lang: 'React/Vue', level: 85, color: '#f59e0b' },
+            { lang: 'TypeScript', level: 75, color: '#8b5cf6' },
+            { lang: 'Git', level: 80, color: '#ef4444' }
+        ],
+        certs: ['Meta Frontend Developer Certificate', 'Google UX Design', 'freeCodeCamp Responsive Web Design', 'React Developer Certification', 'AWS Cloud Practitioner'],
+        companies: ['Google', 'Facebook/Meta', 'Swiggy', 'Zomato', 'Razorpay', 'CRED', 'Meesho', 'ShareChat'],
+        courses: [
+            { name: 'The Odin Project', link: 'https://theodinproject.com', price: 'Free' },
+            { name: 'freeCodeCamp Web Dev', link: 'https://freecodecamp.org', price: 'Free' },
+            { name: 'React — Scrimba', link: 'https://scrimba.com/learn/learnreact', price: 'Free/Paid' },
+            { name: 'Frontend Masters', link: 'https://frontendmasters.com', price: '$39/month' }
+        ],
+        youtube: [
+            { channel: 'Traversy Media', topic: 'Web dev tutorials', icon: '🌐' },
+            { channel: 'Fireship', topic: 'Quick tech concepts', icon: '⚡' },
+            { channel: 'Kevin Powell', topic: 'CSS mastery', icon: '🎨' },
+            { channel: 'Akshay Saini', topic: 'JavaScript deep dive', icon: '🔥' },
+            { channel: 'Web Dev Simplified', topic: 'React & JS projects', icon: '💡' }
+        ],
+        books: [
+            { title: 'You Don\'t Know JS', author: 'Kyle Simpson', icon: '📘' },
+            { title: 'Eloquent JavaScript', author: 'Marijn Haverbeke', icon: '📗' },
+            { title: 'CSS: The Definitive Guide', author: 'Eric Meyer', icon: '📙' },
+            { title: 'Learning React', author: 'Alex Banks', icon: '📕' }
+        ]
+    },
+    'default': {
+        coding: [
+            { lang: 'Core Programming', level: 85, color: '#2563eb' },
+            { lang: 'Problem Solving', level: 80, color: '#10b981' },
+            { lang: 'Data Structures', level: 75, color: '#f59e0b' },
+            { lang: 'System Design', level: 70, color: '#8b5cf6' },
+            { lang: 'Git/Version Control', level: 75, color: '#ef4444' }
+        ],
+        certs: ['Google Career Certificate', 'Coursera Professional Certificate', 'LinkedIn Learning Certificate', 'Udemy Certification', 'Industry Specific Certification'],
+        companies: ['Google', 'Microsoft', 'Amazon', 'TCS', 'Infosys', 'Wipro', 'HCL', 'Cognizant'],
+        courses: [
+            { name: 'Google Career Certificates', link: 'https://grow.google/certificates', price: 'Paid' },
+            { name: 'Coursera — Top Courses', link: 'https://coursera.org', price: 'Free Audit' },
+            { name: 'edX — Professional Certificates', link: 'https://edx.org', price: 'Free Audit' },
+            { name: 'LinkedIn Learning', link: 'https://linkedin.com/learning', price: '1 Month Free' }
+        ],
+        youtube: [
+            { channel: 'freeCodeCamp', topic: 'Full courses free', icon: '🎓' },
+            { channel: 'Traversy Media', topic: 'Tech tutorials', icon: '💻' },
+            { channel: 'TED Talks', topic: 'Career inspiration', icon: '💡' },
+            { channel: 'Y Combinator', topic: 'Startup & career advice', icon: '🚀' },
+            { channel: 'CS Dojo', topic: 'Programming basics', icon: '🧑‍💻' }
+        ],
+        books: [
+            { title: 'Atomic Habits', author: 'James Clear', icon: '📘' },
+            { title: 'Deep Work', author: 'Cal Newport', icon: '📗' },
+            { title: 'The Lean Startup', author: 'Eric Ries', icon: '📙' },
+            { title: 'So Good They Can\'t Ignore You', author: 'Cal Newport', icon: '📕' }
+        ]
+    }
+};
+
+var data = careerData[topCareer] || careerData['default'];
+
+// ── CODING REQUIREMENTS ──
+var cg = document.getElementById('codingGrid');
+data.coding.forEach(function(c) {
+    cg.innerHTML += `
+    <div class="coding-item">
+        <div class="coding-header">
+            <span class="coding-lang">${c.lang}</span>
+            <span class="coding-pct">${c.level}%</span>
+        </div>
+        <div class="coding-bar-wrap">
+            <div class="coding-bar" style="width:${c.level}%;background:${c.color}"></div>
+        </div>
+    </div>`;
+});
+
+// ── CERTIFICATIONS ──
+var cl = document.getElementById('certList');
+data.certs.forEach(function(cert, i) {
+    cl.innerHTML += `
+    <div class="cert-item">
+        <div class="cert-num">${i+1}</div>
+        <div class="cert-name">${cert}</div>
+        <div class="cert-badge">🏆 Recommended</div>
+    </div>`;
+});
+
+// ── COMPANIES ──
+var cmpg = document.getElementById('companyGrid');
+data.companies.forEach(function(company) {
+    cmpg.innerHTML += `<div class="company-chip">🏢 ${company}</div>`;
+});
+
+// ── COURSES ──
+var coursesl = document.getElementById('coursesList');
+data.courses.forEach(function(course) {
+    coursesl.innerHTML += `
+    <div class="course-item">
+        <div class="course-info">
+            <div class="course-name">📖 ${course.name}</div>
+            <a href="${course.link}" target="_blank" class="course-link">Visit Course →</a>
+        </div>
+        <div class="course-price">${course.price}</div>
+    </div>`;
+});
+
+// ── YOUTUBE ──
+var ytg = document.getElementById('ytGrid');
+data.youtube.forEach(function(yt) {
+    ytg.innerHTML += `
+    <div class="yt-card">
+        <div class="yt-icon">${yt.icon}</div>
+        <div class="yt-channel">${yt.channel}</div>
+        <div class="yt-topic">${yt.topic}</div>
+        <a href="https://youtube.com/results?search_query=${encodeURIComponent(yt.channel)}" target="_blank" class="yt-btn">▶ Watch</a>
+    </div>`;
+});
+
+// ── BOOKS ──
+var bg = document.getElementById('booksGrid');
+data.books.forEach(function(book) {
+    bg.innerHTML += `
+    <div class="book-card">
+        <div class="book-icon">${book.icon}</div>
+        <div class="book-title">${book.title}</div>
+        <div class="book-author">by ${book.author}</div>
+    </div>`;
 });
 </script>
 

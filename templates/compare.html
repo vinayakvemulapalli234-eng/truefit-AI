@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Careers | TrueFit AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">🎯 TrueFit AI</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/form">Find Career</a>
+        <a href="/compare">Compare</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/market">Market Trends</a>
+        {% if current_user.is_authenticated %}
+            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">👤 {{ current_user.name }}</span>
+            <a href="/logout" style="background:rgba(255,255,255,0.15);padding:6px 16px;border-radius:20px;">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/register" style="background:#fbbf24;color:#1e293b;padding:6px 16px;border-radius:20px;font-weight:700;">Register</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="compare-hero">
+    <h1>⚖️ Career Comparison Tool</h1>
+    <p>Compare two career paths side by side to make the best decision</p>
+</div>
+
+<div class="compare-container">
+
+    <!-- SELECTOR -->
+    <div class="compare-selector">
+        <div class="selector-box">
+            <label>Select Career 1</label>
+            <select id="career1" onchange="updateComparison()">
+                <option value="Software Engineer">Software Engineer</option>
+                <option value="Data Scientist">Data Scientist</option>
+                <option value="AI/ML Engineer">AI/ML Engineer</option>
+                <option value="Frontend Developer">Frontend Developer</option>
+                <option value="Backend Developer">Backend Developer</option>
+                <option value="Cloud Engineer">Cloud Engineer</option>
+                <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
+                <option value="Product Manager">Product Manager</option>
+                <option value="UI/UX Designer">UI/UX Designer</option>
+                <option value="Data Analyst">Data Analyst</option>
+                <option value="Android Developer">Android Developer</option>
+                <option value="NLP Engineer">NLP Engineer</option>
+                <option value="Blockchain Developer">Blockchain Developer</option>
+                <option value="Financial Analyst">Financial Analyst</option>
+                <option value="Digital Marketing Manager">Digital Marketing Manager</option>
+                <option value="HR Manager">HR Manager</option>
+                <option value="Project Manager">Project Manager</option>
+                <option value="QA Engineer">QA Engineer</option>
+                <option value="Graphic Designer">Graphic Designer</option>
+            </select>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="selector-box">
+            <label>Select Career 2</label>
+            <select id="career2" onchange="updateComparison()">
+                <option value="Data Scientist">Data Scientist</option>
+                <option value="Software Engineer">Software Engineer</option>
+                <option value="AI/ML Engineer">AI/ML Engineer</option>
+                <option value="Frontend Developer">Frontend Developer</option>
+                <option value="Backend Developer">Backend Developer</option>
+                <option value="Cloud Engineer">Cloud Engineer</option>
+                <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
+                <option value="Product Manager">Product Manager</option>
+                <option value="UI/UX Designer">UI/UX Designer</option>
+                <option value="Data Analyst">Data Analyst</option>
+                <option value="Android Developer">Android Developer</option>
+                <option value="NLP Engineer">NLP Engineer</option>
+                <option value="Blockchain Developer">Blockchain Developer</option>
+                <option value="Financial Analyst">Financial Analyst</option>
+                <option value="Digital Marketing Manager">Digital Marketing Manager</option>
+                <option value="HR Manager">HR Manager</option>
+                <option value="Project Manager">Project Manager</option>
+                <option value="QA Engineer">QA Engineer</option>
+                <option value="Graphic Designer">Graphic Designer</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- HEADER CARDS -->
+    <div class="compare-header-row">
+        <div class="compare-header-card blue" id="card1"></div>
+        <div class="compare-header-card green" id="card2"></div>
+    </div>
+
+    <!-- SALARY CHART -->
+    <div class="compare-card">
+        <div class="compare-card-title">💰 Salary Comparison (₹ LPA)</div>
+        <canvas id="salaryCompareChart"></canvas>
+    </div>
+
+    <!-- SKILLS RADAR -->
+    <div class="compare-card">
+        <div class="compare-card-title">🕸️ Skills Requirement Comparison</div>
+        <canvas id="skillsCompareChart"></canvas>
+    </div>
+
+    <!-- STATS TABLE -->
+    <div class="compare-card">
+        <div class="compare-card-title">📊 Side by Side Comparison</div>
+        <div class="compare-table" id="compareTable"></div>
+    </div>
+
+    <!-- GROWTH CHART -->
+    <div class="compare-card">
+        <div class="compare-card-title">📈 Career Growth Trajectory</div>
+        <canvas id="growthChart"></canvas>
+    </div>
+
+    <!-- VERDICT -->
+    <div class="compare-card">
+        <div class="compare-card-title">🏆 AI Verdict</div>
+        <div class="verdict-box" id="verdictBox"></div>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2025 TrueFit AI | Built with Python, Flask & Machine Learning</p>
+</footer>
+
+<script>
+var salaryChart, skillsChart, growthChart;
+
+var careerDB = {
+    'Software Engineer':        { salary:[8,25], growth:85, demand:90, workLife:72, remote:75, skills:[90,70,65,50,85,80], years:[8,14,20,30,40], tag:'🖥️', desc:'Build software products and systems', edu:'B.Tech CS', diff:7 },
+    'Data Scientist':           { salary:[10,30], growth:92, demand:95, workLife:70, remote:80, skills:[95,65,60,70,92,75], years:[10,18,25,35,48], tag:'📊', desc:'Analyze data and build ML models', edu:'B.Tech/M.Tech CS', diff:8 },
+    'AI/ML Engineer':           { salary:[12,35], growth:95, demand:96, workLife:68, remote:78, skills:[95,60,55,65,95,70], years:[12,20,28,38,55], tag:'🤖', desc:'Build and deploy AI/ML systems', edu:'M.Tech AI/CS', diff:9 },
+    'Frontend Developer':       { salary:[6,22], growth:78, demand:85, workLife:80, remote:85, skills:[85,75,55,90,70,80], years:[6,10,16,22,32], tag:'🎨', desc:'Build user interfaces and web apps', edu:'B.Tech CS/IT', diff:6 },
+    'Backend Developer':        { salary:[7,24], growth:80, demand:87, workLife:75, remote:80, skills:[90,65,60,50,85,75], years:[7,12,18,26,36], tag:'⚙️', desc:'Build server-side systems and APIs', edu:'B.Tech CS/IT', diff:7 },
+    'Cloud Engineer':           { salary:[10,32], growth:88, demand:91, workLife:73, remote:82, skills:[88,68,65,55,85,78], years:[10,16,22,32,44], tag:'☁️', desc:'Design and manage cloud infrastructure', edu:'B.Tech CS/IT', diff:7 },
+    'DevOps Engineer':          { salary:[8,28], growth:85, demand:89, workLife:70, remote:80, skills:[88,70,65,52,87,78], years:[8,14,20,30,42], tag:'🔄', desc:'Automate and manage deployment pipelines', edu:'B.Tech CS/IT', diff:7 },
+    'Cybersecurity Analyst':    { salary:[8,26], growth:87, demand:93, workLife:72, remote:70, skills:[90,72,60,55,92,72], years:[8,14,20,28,40], tag:'🔒', desc:'Protect systems from cyber threats', edu:'B.Tech CS/Cybersecurity', diff:8 },
+    'Product Manager':          { salary:[15,40], growth:82, demand:84, workLife:65, remote:75, skills:[65,92,95,80,85,88], years:[15,22,30,40,55], tag:'📋', desc:'Lead product strategy and development', edu:'B.Tech + MBA', diff:7 },
+    'UI/UX Designer':           { salary:[5,20], growth:75, demand:82, workLife:82, remote:88, skills:[70,85,60,98,72,80], years:[5,9,14,20,28], tag:'🎭', desc:'Design user experiences and interfaces', edu:'B.Des/B.Tech CS', diff:6 },
+    'Data Analyst':             { salary:[6,20], growth:80, demand:88, workLife:78, remote:78, skills:[82,75,58,65,88,75], years:[6,11,16,22,30], tag:'📉', desc:'Analyze business data for insights', edu:'B.Tech/B.Sc Statistics', diff:6 },
+    'Android Developer':        { salary:[6,22], growth:76, demand:82, workLife:78, remote:80, skills:[88,70,58,80,78,75], years:[6,10,16,24,32], tag:'📱', desc:'Build Android mobile applications', edu:'B.Tech CS/IT', diff:7 },
+    'NLP Engineer':             { salary:[12,35], growth:93, demand:94, workLife:70, remote:80, skills:[95,62,55,68,95,70], years:[12,20,28,38,52], tag:'💬', desc:'Build language understanding AI systems', edu:'M.Tech AI/CS', diff:9 },
+    'Blockchain Developer':     { salary:[10,30], growth:82, demand:80, workLife:72, remote:85, skills:[90,65,58,72,88,70], years:[10,16,24,34,46], tag:'⛓️', desc:'Build decentralized blockchain apps', edu:'B.Tech CS', diff:8 },
+    'Financial Analyst':        { salary:[8,28], growth:75, demand:80, workLife:68, remote:65, skills:[70,80,72,60,95,72], years:[8,14,20,28,38], tag:'💹', desc:'Analyze financial data and investments', edu:'MBA Finance/CA', diff:7 },
+    'Digital Marketing Manager':{ salary:[5,18], growth:78, demand:85, workLife:78, remote:82, skills:[60,88,80,90,80,82], years:[5,9,14,20,26], tag:'📢', desc:'Drive digital growth and campaigns', edu:'MBA Marketing', diff:5 },
+    'HR Manager':               { salary:[5,16], growth:68, demand:75, workLife:75, remote:70, skills:[45,95,88,65,72,88], years:[5,9,13,18,24], tag:'👥', desc:'Manage people and organizational culture', edu:'MBA HR', diff:5 },
+    'Project Manager':          { salary:[10,35], growth:78, demand:82, workLife:68, remote:72, skills:[60,90,95,65,82,88], years:[10,16,22,32,44], tag:'📌', desc:'Lead projects and cross-functional teams', edu:'B.Tech + MBA/PMP', diff:7 },
+    'QA Engineer':              { salary:[5,18], growth:72, demand:80, workLife:80, remote:78, skills:[80,72,58,60,85,78], years:[5,9,14,20,26], tag:'🧪', desc:'Ensure software quality and testing', edu:'B.Tech CS/IT', diff:5 },
+    'Graphic Designer':         { salary:[3,12], growth:65, demand:72, workLife:82, remote:88, skills:[55,80,55,98,68,75], years:[3,6,10,14,18], tag:'🖌️', desc:'Create visual designs and branding', edu:'B.Des/BFA', diff:5 },
+};
+
+function updateComparison() {
+    var c1 = document.getElementById('career1').value;
+    var c2 = document.getElementById('career2').value;
+    var d1 = careerDB[c1];
+    var d2 = careerDB[c2];
+
+    // Header cards
+    document.getElementById('card1').innerHTML = `
+        <div style="font-size:2.5rem;margin-bottom:10px">${d1.tag}</div>
+        <div style="font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800">${c1}</div>
+        <div style="opacity:0.85;font-size:0.88rem;margin-top:6px">${d1.desc}</div>
+        <div style="margin-top:12px;font-size:0.85rem">📚 ${d1.edu}</div>`;
+
+    document.getElementById('card2').innerHTML = `
+        <div style="font-size:2.5rem;margin-bottom:10px">${d2.tag}</div>
+        <div style="font-family:'Sora',sans-serif;font-size:1.3rem;font-weight:800">${c2}</div>
+        <div style="opacity:0.85;font-size:0.88rem;margin-top:6px">${d2.desc}</div>
+        <div style="margin-top:12px;font-size:0.85rem">📚 ${d2.edu}</div>`;
+
+    // Salary Chart
+    if(salaryChart) salaryChart.destroy();
+    salaryChart = new Chart(document.getElementById('salaryCompareChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Entry Level', 'Mid Level', 'Senior Level'],
+            datasets: [
+                {
+                    label: c1,
+                    data: [d1.salary[0], Math.round((d1.salary[0]+d1.salary[1])/2), d1.salary[1]],
+                    backgroundColor: '#2563eb',
+                    borderRadius: 8,
+                },
+                {
+                    label: c2,
+                    data: [d2.salary[0], Math.round((d2.salary[0]+d2.salary[1])/2), d2.salary[1]],
+                    backgroundColor: '#10b981',
+                    borderRadius: 8,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { ticks: { callback: function(v){ return '₹'+v+'L'; } }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Skills Radar
+    if(skillsChart) skillsChart.destroy();
+    skillsChart = new Chart(document.getElementById('skillsCompareChart'), {
+        type: 'radar',
+        data: {
+            labels: ['Technical','Communication','Leadership','Creativity','Analytical','Teamwork'],
+            datasets: [
+                {
+                    label: c1,
+                    data: d1.skills,
+                    backgroundColor: 'rgba(37,99,235,0.15)',
+                    borderColor: '#2563eb',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 4,
+                },
+                {
+                    label: c2,
+                    data: d2.skills,
+                    backgroundColor: 'rgba(16,185,129,0.15)',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    min: 0, max: 100,
+                    ticks: { stepSize: 20 },
+                    grid: { color: '#e2e8f0' },
+                    pointLabels: { font: { size: 11, weight: '600' } }
+                }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // Comparison Table
+    var metrics = [
+        { label: '💰 Max Salary', v1: '₹'+d1.salary[1]+' LPA', v2: '₹'+d2.salary[1]+' LPA', better: d1.salary[1] > d2.salary[1] ? 1 : 2 },
+        { label: '📈 Growth Rate', v1: d1.growth+'%', v2: d2.growth+'%', better: d1.growth > d2.growth ? 1 : 2 },
+        { label: '🔥 Job Demand', v1: d1.demand+'%', v2: d2.demand+'%', better: d1.demand > d2.demand ? 1 : 2 },
+        { label: '⚖️ Work-Life Balance', v1: d1.workLife+'%', v2: d2.workLife+'%', better: d1.workLife > d2.workLife ? 1 : 2 },
+        { label: '🌐 Remote Work', v1: d1.remote+'%', v2: d2.remote+'%', better: d1.remote > d2.remote ? 1 : 2 },
+        { label: '🎓 Difficulty', v1: d1.diff+'/10', v2: d2.diff+'/10', better: d1.diff < d2.diff ? 1 : 2 },
+    ];
+
+    var tableHTML = '<div class="ct-header"><div></div><div style="color:#2563eb;font-weight:700">'+c1+'</div><div style="color:#10b981;font-weight:700">'+c2+'</div></div>';
+    metrics.forEach(function(m) {
+        tableHTML += `<div class="ct-row">
+            <div class="ct-label">${m.label}</div>
+            <div class="ct-val ${m.better===1?'ct-winner':''}">${m.v1} ${m.better===1?'✅':''}</div>
+            <div class="ct-val ${m.better===2?'ct-winner':''}">${m.v2} ${m.better===2?'✅':''}</div>
+        </div>`;
+    });
+    document.getElementById('compareTable').innerHTML = tableHTML;
+
+    // Growth Chart
+    if(growthChart) growthChart.destroy();
+    growthChart = new Chart(document.getElementById('growthChart'), {
+        type: 'line',
+        data: {
+            labels: ['Year 1','Year 2','Year 3','Year 5','Year 8'],
+            datasets: [
+                {
+                    label: c1+' Salary (LPA)',
+                    data: d1.years,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37,99,235,0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 5,
+                },
+                {
+                    label: c2+' Salary (LPA)',
+                    data: d2.years,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16,185,129,0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 5,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { ticks: { callback: function(v){ return '₹'+v+'L'; } }, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Verdict
+    var score1 = d1.salary[1] + d1.growth + d1.demand + d1.workLife + d1.remote;
+    var score2 = d2.salary[1] + d2.growth + d2.demand + d2.workLife + d2.remote;
+    var winner = score1 > score2 ? c1 : c2;
+    var winnerTag = score1 > score2 ? d1.tag : d2.tag;
+    var winnerColor = score1 > score2 ? '#2563eb' : '#10b981';
+
+    document.getElementById('verdictBox').innerHTML = `
+        <div class="verdict-winner" style="border-color:${winnerColor}">
+            <div style="font-size:3rem">${winnerTag}</div>
+            <div class="verdict-title">${winner} wins!</div>
+            <div class="verdict-sub">Based on salary, growth, demand, work-life balance and remote work scores</div>
+            <div class="verdict-scores">
+                <div class="verdict-score" style="background:#eff6ff;color:#2563eb">${c1}: ${score1} pts</div>
+                <div class="verdict-score" style="background:#f0fdf4;color:#10b981">${c2}: ${score2} pts</div>
+            </div>
+        </div>`;
+}
+
+// Init on load
+updateComparison();
+</script>
+
+</body>
+</html>

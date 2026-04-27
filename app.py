@@ -1,32 +1,62 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from database import db, User, Assessment
 import joblib
-import json
+import numpy as np
 import os
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'truefit_ai_secret_2025'
+app.secret_key = 'truefit_secret_key_2025'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///truefit.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db.init_app(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Load ML model
 model = joblib.load('model/career_model.pkl')
-le = joblib.load('model/label_encoder.pkl')
+encoder = joblib.load('model/label_encoder.pkl')
+
+# ─── DATABASE MODELS ───────────────────────────────────────
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    assessments = db.relationship('Assessment', backref='user', lazy=True)
+
+class Assessment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    technical_skills = db.Column(db.String(500))
+    soft_skills = db.Column(db.String(500))
+    education = db.Column(db.String(200))
+    experience = db.Column(db.String(200))
+    career_interest = db.Column(db.String(200))
+    top_career = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-with app.app_context():
-    db.create_all()
+# ─── HELPER FUNCTION ───────────────────────────────────────
+def predict_careers(technical, soft, education, experience, interest, top_n=5):
+    combined = f"{technical} {soft} {education} {experience} {interest}"
+    proba = model.predict_proba([combined])[0]
+    top_indices = np.argsort(proba)[::-1][:top_n]
+    results = []
+    for idx in top_indices:
+        career = encoder.classes_[idx]
+        confidence = round(proba[idx] * 100, 1)
+        results.append({'career': career, 'confidence': confidence})
+    return results
 
+# ─── ROUTES ────────────────────────────────────────────────
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -36,9 +66,47 @@ def home():
 def form():
     return render_template('form.html')
 
+@app.route('/results', methods=['POST'])
+@login_required
+def results():
+    technical = request.form.get('technical_skills', '')
+    soft = request.form.get('soft_skills', '')
+    education = request.form.get('education', '')
+    experience = request.form.get('experience', '')
+    interest = request.form.get('career_interest', '')
+    num = int(request.form.get('num_recommendations', 5))
+
+    predictions = predict_careers(technical, soft, education, experience, interest, num)
+
+    assessment = Assessment(
+        user_id=current_user.id,
+        technical_skills=technical,
+        soft_skills=soft,
+        education=education,
+        experience=experience,
+        career_interest=interest,
+        top_career=predictions[0]['career'] if predictions else 'Unknown'
+    )
+    db.session.add(assessment)
+    db.session.commit()
+
+    return render_template('results.html',
+        predictions=predictions,
+        top_career=predictions[0]['career'] if predictions else 'Unknown',
+        top_confidence=predictions[0]['confidence'] if predictions else 0,
+        user_name=current_user.name,
+        technical=technical,
+        soft=soft
+    )
+
 @app.route('/dashboard')
+@login_required
 def dashboard():
-    return render_template('dashboard.html')
+    assessments = Assessment.query.filter_by(user_id=current_user.id).all()
+    return render_template('dashboard.html',
+        assessments=assessments,
+        total=len(assessments)
+    )
 
 @app.route('/roadmap')
 def roadmap():
@@ -48,32 +116,46 @@ def roadmap():
 def market():
     return render_template('market.html')
 
+@app.route('/compare')
+def compare():
+    return render_template('compare.html')
+
+@app.route('/interview')
+def interview():
+    return render_template('interview.html')
+
+# ─── AUTH ROUTES ───────────────────────────────────────────
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
         if User.query.filter_by(email=email).first():
             return render_template('register.html', error='Email already exists!')
+
         hashed = generate_password_hash(password)
-        user = User(username=username, email=email, password=hashed)
+        user = User(name=name, email=email, password=hashed)
         db.session.add(user)
         db.session.commit()
         login_user(user)
         return redirect(url_for('form'))
+
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form.get('email')
+        password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
+
         if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('form'))
         return render_template('login.html', error='Invalid email or password!')
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -82,123 +164,61 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
-@app.route('/results', methods=['POST'])
+# ─── PDF EXPORT ────────────────────────────────────────────
+@app.route('/export-pdf', methods=['POST'])
 @login_required
-def results():
-    technical_skills = request.form.get('technical_skills', '')
-    soft_skills = request.form.get('soft_skills', '')
-    education = request.form.get('education', '')
-    experience = request.form.get('experience', '')
-    career_interest = request.form.get('career_interest', '')
-
-    combined = (
-        technical_skills + ' ' + technical_skills + ' ' +
-        soft_skills + ' ' +
-        education + ' ' +
-        experience + ' ' +
-        career_interest + ' ' + career_interest
-    )
-
-    classes = le.classes_
-    decision = model.decision_function([combined])[0]
-    career_scores = list(zip(classes, decision))
-    career_scores.sort(key=lambda x: x[1], reverse=True)
-
-    top5 = career_scores[:5]
-    base_confidences = [98, 91, 84, 76, 68]
-    results_data = []
-    for i, (career, score) in enumerate(top5):
-        results_data.append({
-            'rank': i + 1,
-            'career': career,
-            'confidence': base_confidences[i],
-            'score': round(float(score), 3)
-        })
-
-    assessment = Assessment(
-        user_id=current_user.id,
-        technical_skills=technical_skills,
-        soft_skills=soft_skills,
-        education=education,
-        experience=experience,
-        career_interest=career_interest,
-        top_career=results_data[0]['career'],
-        all_results=json.dumps(results_data)
-    )
-    db.session.add(assessment)
-    db.session.commit()
-
-    return render_template('results.html',
-        results=results_data,
-        user=current_user,
-        form_data=request.form,
-        assessment_id=assessment.id
-    )
-
-@app.route('/export_pdf/<int:assessment_id>')
-@login_required
-def export_pdf(assessment_id):
+def export_pdf():
     from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
     from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from flask import make_response
     import io
 
-    assessment = Assessment.query.get_or_404(assessment_id)
-    results_data = json.loads(assessment.all_results)
+    top_career = request.form.get('top_career', 'Unknown')
+    predictions_raw = request.form.get('predictions', '')
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    story = []
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
 
-    title_style = ParagraphStyle('title', fontSize=24, fontName='Helvetica-Bold',
-                                  textColor=colors.HexColor('#2563eb'), spaceAfter=10)
-    heading_style = ParagraphStyle('heading', fontSize=14, fontName='Helvetica-Bold',
-                                    textColor=colors.HexColor('#1e293b'), spaceAfter=6)
-    normal_style = ParagraphStyle('normal', fontSize=11, fontName='Helvetica',
-                                   textColor=colors.HexColor('#374151'), spaceAfter=4)
+    c.setFillColor(colors.HexColor('#2563eb'))
+    c.rect(0, height-100, width, 100, fill=True, stroke=False)
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(50, height-50, "TrueFit AI - Career Report")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, height-75, f"Generated for: {current_user.name}")
 
-    story.append(Paragraph("TrueFit AI - Career Report", title_style))
-    story.append(Paragraph(f"Generated for: {current_user.username}", normal_style))
-    story.append(Paragraph(f"Date: {assessment.created_at.strftime('%d %B %Y')}", normal_style))
-    story.append(Spacer(1, 20))
+    c.setFillColor(colors.HexColor('#1e293b'))
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, height-140, f"Best Career Match: {top_career}")
 
-    story.append(Paragraph("Your Profile", heading_style))
-    story.append(Paragraph(f"Technical Skills: {assessment.technical_skills}", normal_style))
-    story.append(Paragraph(f"Soft Skills: {assessment.soft_skills}", normal_style))
-    story.append(Paragraph(f"Education: {assessment.education}", normal_style))
-    story.append(Paragraph(f"Experience: {assessment.experience}", normal_style))
-    story.append(Spacer(1, 20))
+    c.setFont("Helvetica", 12)
+    c.drawString(50, height-170, f"Date: {datetime.now().strftime('%B %d, %Y')}")
+    c.drawString(50, height-195, f"Powered by: Random Forest ML Model")
 
-    story.append(Paragraph("Top Career Recommendations", heading_style))
-    table_data = [['Rank', 'Career', 'Confidence']]
-    for r in results_data:
-        table_data.append([f"#{r['rank']}", r['career'], f"{r['confidence']}%"])
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, height-235, "Your Top Career Recommendations:")
 
-    table = Table(table_data, colWidths=[60, 300, 100])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f8fafc'), colors.white]),
-        ('FONTSIZE', (0, 1), (-1, -1), 11),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-        ('PADDING', (0, 0), (-1, -1), 10),
-    ]))
-    story.append(table)
-    story.append(Spacer(1, 20))
-    story.append(Paragraph("Powered by TrueFit AI — Built with Python, Flask & Machine Learning", 
-                 ParagraphStyle('footer', fontSize=9, textColor=colors.HexColor('#94a3b8'))))
+    y = height - 265
+    for i, line in enumerate(predictions_raw.split(',')):
+        if line.strip():
+            c.setFont("Helvetica", 12)
+            c.drawString(70, y, f"{i+1}. {line.strip()}")
+            y -= 25
 
-    doc.build(story)
+    c.save()
     buffer.seek(0)
 
     response = make_response(buffer.read())
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'attachment; filename=truefit_report.pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=TrueFit_Career_Report.pdf'
     return response
+
+# ─── INIT DB ───────────────────────────────────────────────
+with app.app_context():
+    db.create_all()
+    print("✅ Database ready!")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

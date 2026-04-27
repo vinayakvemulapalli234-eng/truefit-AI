@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
-from sklearn.svm import LinearSVC
 import joblib
 import os
 import warnings
@@ -17,7 +17,7 @@ print("🚀 Starting TrueFit AI Model Training...")
 df = pd.read_csv('model/dataset.csv')
 print(f"✅ Dataset loaded: {len(df)} records, {df['career'].nunique()} careers")
 
-# Combine all text features with weights
+# Combine features
 df['combined'] = (
     df['technical_skills'] + ' ' +
     df['technical_skills'] + ' ' +
@@ -35,12 +35,12 @@ y = df['career']
 le = LabelEncoder()
 y_encoded = le.fit_transform(y)
 
-# Split data
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y_encoded, test_size=0.15, random_state=42
 )
 
-# Build pipeline with LinearSVC
+# Pipeline with RandomForest
 pipeline = Pipeline([
     ('tfidf', TfidfVectorizer(
         max_features=2000,
@@ -49,10 +49,11 @@ pipeline = Pipeline([
         sublinear_tf=True,
         min_df=1
     )),
-    ('clf', LinearSVC(
-        C=1.0,
-        max_iter=2000,
-        random_state=42
+    ('clf', RandomForestClassifier(
+        n_estimators=200,
+        random_state=42,
+        max_depth=15,
+        min_samples_split=2
     ))
 ])
 
@@ -70,7 +71,6 @@ os.makedirs('model', exist_ok=True)
 joblib.dump(pipeline, 'model/career_model.pkl')
 joblib.dump(le, 'model/label_encoder.pkl')
 
-print("✅ Model saved to model/career_model.pkl")
-print("✅ Label encoder saved to model/label_encoder.pkl")
-print(f"✅ Careers covered: {list(le.classes_)}")
+print("✅ Model saved!")
+print(f"✅ Careers covered: {len(le.classes_)}")
 print("🎉 Training Complete!")

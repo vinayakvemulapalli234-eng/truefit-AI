@@ -16,6 +16,13 @@
         <a href="/form">Find Career</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/market">Market Trends</a>
+        {% if current_user.is_authenticated %}
+            <span style="color:rgba(255,255,255,0.7);font-size:0.85rem;">Hi, {{ current_user.name }}!</span>
+            <a href="/logout" style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:8px;">Logout</a>
+        {% else %}
+            <a href="/login" style="background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:8px;">Login</a>
+            <a href="/register" style="background:#fbbf24;color:#1e293b;padding:8px 16px;border-radius:8px;font-weight:700;">Register</a>
+        {% endif %}
     </div>
 </nav>
 
@@ -31,7 +38,6 @@
 <div class="form-container">
     <form action="/results" method="POST" id="careerForm">
 
-        <!-- SECTION 1 -->
         <div class="form-section">
             <div class="section-title">🎯 Career Interest</div>
             <div class="form-group">
@@ -40,7 +46,6 @@
             </div>
         </div>
 
-        <!-- SECTION 2 -->
         <div class="form-section">
             <div class="section-title">💻 Technical Skills</div>
             <div class="form-group">
@@ -49,7 +54,6 @@
             </div>
         </div>
 
-        <!-- SECTION 3 -->
         <div class="form-section">
             <div class="section-title">🤝 Soft Skills</div>
             <div class="form-group">
@@ -58,7 +62,6 @@
             </div>
         </div>
 
-        <!-- SECTION 4 -->
         <div class="form-section">
             <div class="section-title">🎓 Education</div>
             <div class="form-group">
@@ -71,21 +74,19 @@
             </div>
         </div>
 
-        <!-- SECTION 5 -->
         <div class="form-section">
             <div class="section-title">💼 Work Experience</div>
             <div class="form-group">
                 <label>Professional Experience <span class="required">*</span></label>
-                <textarea name="experience" rows="3" placeholder="e.g., 2 years software development, worked on ML projects, internship at startup" required></textarea>
+                <textarea name="experience" rows="3" placeholder="e.g., 2 years software development, worked on ML projects" required></textarea>
             </div>
         </div>
 
-        <!-- SECTION 6 -->
         <div class="form-section">
             <div class="section-title">💬 Additional Information</div>
             <div class="form-group">
                 <label>Career Goals</label>
-                <textarea name="goals" rows="3" placeholder="e.g., Want to become a Data Scientist, interested in AI research, aiming for product management"></textarea>
+                <textarea name="goals" rows="3" placeholder="e.g., Want to become a Data Scientist, interested in AI research"></textarea>
             </div>
             <div class="form-group">
                 <label>Number of Recommendations</label>
@@ -109,7 +110,6 @@
 </footer>
 
 <script>
-// Progress bar based on filled fields
 const form = document.getElementById('careerForm');
 const inputs = form.querySelectorAll('input, textarea, select');
 const bar = document.getElementById('progressBar');
@@ -117,14 +117,11 @@ const text = document.getElementById('progressText');
 
 function updateProgress() {
     let filled = 0;
-    inputs.forEach(input => {
-        if (input.value.trim() !== '') filled++;
-    });
+    inputs.forEach(input => { if (input.value.trim() !== '') filled++; });
     const percent = Math.round((filled / inputs.length) * 100);
     bar.style.width = percent + '%';
     text.textContent = percent + '% Complete';
 }
-
 inputs.forEach(input => input.addEventListener('input', updateProgress));
 </script>
 
